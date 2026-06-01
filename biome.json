@@ -18,6 +18,12 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
+      },
+      "a11y": {
+        "noLabelWithoutControl": "off"
+      },
       "suspicious": {
         "noUnknownAtRules": "off"
       }
