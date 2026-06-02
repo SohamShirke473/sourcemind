@@ -1,34 +1,42 @@
-import { Navbar } from "@/components/dashboard/navbar";
-import { SearchInput } from "@/components/dashboard/search-input";
-import { WorkspaceGrid } from "@/components/dashboard/workspace-grid";
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import Link from "next/link";
 
-export default async function DashboardPage() {
-  await prefetch(trpc.workspace.list.queryOptions());
-
+export default function LandingPage() {
   return (
-    <HydrateClient>
-      <div
-        className="flex min-h-screen flex-col"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, var(--border) 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }}
-      >
-        <Navbar />
-        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="font-mono text-lg font-bold uppercase tracking-[0.05em] text-foreground">
-                YOUR WORKSPACES
-              </h1>
-            </div>
-            <SearchInput />
-          </div>
-          <WorkspaceGrid />
-        </main>
-      </div>
-    </HydrateClient>
+    <div
+      className="flex min-h-screen flex-col"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle, var(--border) 1px, transparent 1px)",
+        backgroundSize: "24px 24px",
+      }}
+    >
+      <nav className="flex items-center justify-between px-6 py-4">
+        <span className="font-mono text-lg font-bold tracking-tight">
+          SourceMind
+        </span>
+        <Link
+          href="/dashboard"
+          className="font-mono text-sm font-medium text-foreground underline underline-offset-4"
+        >
+          Sign in
+        </Link>
+      </nav>
+
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 text-center">
+        <h1 className="mb-4 font-mono text-5xl font-bold tracking-tight sm:text-6xl">
+          Chat with your sources
+        </h1>
+        <p className="mb-8 max-w-xl font-mono text-sm text-muted-foreground">
+          Upload documents, scrape websites, link YouTube videos — then ask
+          questions and get answers grounded in your own content.
+        </p>
+        <Link
+          href="/dashboard"
+          className="inline-flex h-10 items-center justify-center rounded-md bg-foreground px-6 font-mono text-sm font-medium text-background transition-opacity hover:opacity-90"
+        >
+          Get started
+        </Link>
+      </main>
+    </div>
   );
 }

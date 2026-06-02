@@ -58,7 +58,7 @@ export function CreateWorkspaceDialog({
         toast.success("Workspace created");
         onOpenChange(false);
         queryClient.invalidateQueries(trpc.workspace.list.queryFilter());
-        router.push(`/workspace/${workspace.id}`);
+        router.push(`/dashboard/workspaces/${workspace.id}`);
       },
       onError: (error) => {
         toast.error(error.message);

@@ -101,7 +101,7 @@ export function WorkspaceCard({
   return (
     <>
       <a
-        href={`/workspace/${id}`}
+        href={`/dashboard/workspaces/${id}`}
         className={cn(
           "group/card relative flex flex-col rounded-ui border border-border bg-card transition-all duration-150",
           "hover:border-primary hover:cursor-pointer",

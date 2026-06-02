@@ -59,9 +59,14 @@ export function SourcesPanel({
   const queryClient = useQueryClient();
   const [collapsed, setCollapsed] = useState(false);
 
-  const { data: sources = [] } = useQuery(
-    trpc.source.list.queryOptions({ workspaceId }),
-  );
+  const { data: sources = [] } = useQuery({
+    ...trpc.source.list.queryOptions({ workspaceId }),
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data || data.length === 0) return false;
+      return data.some((s) => s.status === "processing") ? 3000 : false;
+    },
+  });
 
   const deleteSource = useMutation(
     trpc.source.delete.mutationOptions({
