@@ -65,3 +65,26 @@ export async function getSignedFileUrl(key: string): Promise<string> {
   });
   return getSignedUrl(r2, command, { expiresIn: 3600 });
 }
+
+export async function getUploadUrl(
+  key: string,
+  contentType: string,
+): Promise<string> {
+  const command = new PutObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+    ContentType: contentType,
+  });
+  return getSignedUrl(r2, command, { expiresIn: 3600 });
+}
+
+export async function downloadFileBuffer(key: string): Promise<Buffer> {
+  const response = await r2.send(
+    new GetObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: key,
+    }),
+  );
+  const bytes = await response.Body?.transformToByteArray();
+  return Buffer.from(bytes ?? new Uint8Array());
+}

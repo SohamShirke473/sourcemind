@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { PillButton } from "@/components/ui/pill-button";
 import { Textarea } from "@/components/ui/textarea";
 import { useTRPC } from "@/trpc/client";
@@ -78,21 +79,21 @@ export function CreateWorkspaceDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[480px] gap-0 p-0"
+        className="max-w-[480px] sm:max-w-[480px] gap-0 p-0"
         showCloseButton={false}
       >
         <DialogHeader className="flex flex-row items-center justify-between border-b border-border px-6 py-4">
           <DialogTitle className="font-mono text-sm font-bold uppercase tracking-[0.05em]">
             NEW WORKSPACE
           </DialogTitle>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => onOpenChange(false)}
-            className="flex size-7 items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Close"
           >
             <span className="text-sm">✕</span>
-          </button>
+          </Button>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-6 py-5">
           <div className="flex flex-col gap-1.5">

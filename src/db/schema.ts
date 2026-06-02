@@ -20,6 +20,9 @@ export const sourceTypeEnum = pgEnum("source_type", [
   "youtube",
   "audio",
   "text",
+  "document",
+  "code",
+  "image",
 ]);
 
 export const sourceStatusEnum = pgEnum("source_status", [

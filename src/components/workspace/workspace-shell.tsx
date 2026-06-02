@@ -33,11 +33,20 @@ export function WorkspaceShell({ workspace }: WorkspaceShellProps) {
     >
       <WorkspaceHeader workspace={workspace} />
       <WorkspaceLayout
-        sources={<SourcesPanel onUploadClick={() => setUploadOpen(true)} />}
+        sources={
+          <SourcesPanel
+            onUploadClick={() => setUploadOpen(true)}
+            workspaceId={workspace.id}
+          />
+        }
         chat={<ChatPanel />}
         artifacts={<ArtifactsPanel />}
       />
-      <UploadModal open={uploadOpen} onOpenChange={setUploadOpen} />
+      <UploadModal
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        workspaceId={workspace.id}
+      />
     </div>
   );
 }
