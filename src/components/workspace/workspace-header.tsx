@@ -60,7 +60,7 @@ export function WorkspaceHeader({ workspace }: WorkspaceHeaderProps) {
   return (
     <header className="flex items-center gap-4 border-b border-border bg-card px-6 py-3">
       <Link
-        href="/"
+        href="/dashboard"
         className="flex size-8 items-center justify-center text-foreground hover:bg-muted"
         aria-label="Back to dashboard"
       >
