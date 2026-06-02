@@ -74,9 +74,7 @@ export function WorkspaceCard({
   const updateWorkspace = useMutation(
     trpc.workspace.update.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.workspace.list.queryKey(),
-        });
+        queryClient.invalidateQueries(trpc.workspace.list.queryFilter());
         toast.success("Workspace renamed");
       },
       onError: (err) => toast.error(err.message),
@@ -86,9 +84,7 @@ export function WorkspaceCard({
   const deleteWorkspace = useMutation(
     trpc.workspace.delete.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.workspace.list.queryKey(),
-        });
+        queryClient.invalidateQueries(trpc.workspace.list.queryFilter());
         toast.success("Workspace deleted");
       },
       onError: (err) => toast.error(err.message),

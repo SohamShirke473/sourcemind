@@ -39,9 +39,9 @@ export function WorkspaceHeader({ workspace }: WorkspaceHeaderProps) {
   const updateWorkspace = useMutation(
     trpc.workspace.update.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.workspace.getById.queryKey({ id: workspace.id }),
-        });
+        queryClient.invalidateQueries(
+          trpc.workspace.getById.queryFilter({ id: workspace.id }),
+        );
         toast.success("Workspace renamed");
       },
       onError: (err) => toast.error(err.message),
