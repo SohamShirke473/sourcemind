@@ -35,8 +35,7 @@ export function prefetch<T extends TRPCQueryOptionsReturn>(queryOptions: T) {
   const queryClient = getQueryClient();
   if (queryOptions.queryKey[1]?.type === "infinite") {
     // biome-ignore lint/suspicious/noExplicitAny: required by TRPCQueryOptions
-    void queryClient.prefetchInfiniteQuery(queryOptions as any);
-  } else {
-    void queryClient.prefetchQuery(queryOptions);
+    return queryClient.prefetchInfiniteQuery(queryOptions as any);
   }
+  return queryClient.prefetchQuery(queryOptions);
 }

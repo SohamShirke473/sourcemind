@@ -1,48 +1,77 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Grid3X3Icon, ListIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { DashboardEmptyState } from "@/components/dashboard/empty-state";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useTRPC } from "@/trpc/client";
 import { WorkspaceCard } from "./workspace-card";
-
-interface Workspace {
-  id: string;
-  title: string;
-  lastModified: string;
-  sourceCount: number;
-}
-
-const MOCK_WORKSPACES: Workspace[] = [
-  {
-    id: "1",
-    title: "React Documentation Analysis",
-    lastModified: "2 hours ago",
-    sourceCount: 4,
-  },
-  {
-    id: "2",
-    title: "Q4 Financial Reports",
-    lastModified: "Yesterday",
-    sourceCount: 8,
-  },
-  {
-    id: "3",
-    title: "Machine Learning Research Papers",
-    lastModified: "3 days ago",
-    sourceCount: 12,
-  },
-  {
-    id: "4",
-    title: "Product Requirements Notes",
-    lastModified: "1 week ago",
-    sourceCount: 2,
-  },
-];
 
 type ViewMode = "grid" | "table";
 
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60)
+    return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
+  if (diffHours < 24)
+    return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+  return date.toLocaleDateString();
+}
+
 export function WorkspaceGrid() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { data: workspaces, isLoading } = useQuery(
+    trpc.workspace.list.queryOptions(),
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+
+  const deleteWorkspace = useMutation(
+    trpc.workspace.delete.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.workspace.list.queryKey(),
+        });
+        toast.success("Workspace deleted");
+      },
+      onError: (err) => toast.error(err.message),
+    }),
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <span className="text-xs text-muted-foreground">Loading...</span>
+      </div>
+    );
+  }
+
+  if (!workspaces?.length) {
+    return <DashboardEmptyState />;
+  }
 
   return (
     <div>
@@ -77,13 +106,15 @@ export function WorkspaceGrid() {
 
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {MOCK_WORKSPACES.map((workspace) => (
+          {workspaces.map((workspace) => (
             <WorkspaceCard
               key={workspace.id}
               id={workspace.id}
               title={workspace.title}
-              lastModified={workspace.lastModified}
-              sourceCount={workspace.sourceCount}
+              description={workspace.description}
+              emoji={workspace.emoji}
+              sourceCount={0}
+              lastModified={workspace.updatedAt.toISOString()}
             />
           ))}
         </div>
@@ -105,7 +136,7 @@ export function WorkspaceGrid() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_WORKSPACES.map((workspace) => (
+              {workspaces.map((workspace) => (
                 <tr
                   key={workspace.id}
                   className="border-b border-border transition-colors hover:bg-muted/30"
@@ -113,16 +144,15 @@ export function WorkspaceGrid() {
                   <td className="px-4 py-3">
                     <a
                       href={`/workspace/${workspace.id}`}
-                      className="font-mono text-sm font-bold text-foreground hover:text-primary"
+                      className="flex items-center gap-2 font-mono text-sm font-bold text-foreground hover:text-primary"
                     >
+                      {workspace.emoji && <span>{workspace.emoji}</span>}
                       {workspace.title}
                     </a>
                   </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">0</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {workspace.sourceCount}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {workspace.lastModified}
+                    {formatRelativeTime(workspace.updatedAt)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
@@ -135,6 +165,12 @@ export function WorkspaceGrid() {
                       </button>
                       <button
                         type="button"
+                        onClick={() =>
+                          setDeleteTarget({
+                            id: workspace.id,
+                            title: workspace.title,
+                          })
+                        }
                         className="flex size-7 items-center justify-center text-muted-foreground hover:bg-muted hover:text-destructive"
                         aria-label="Delete"
                       >
@@ -148,6 +184,37 @@ export function WorkspaceGrid() {
           </table>
         </div>
       )}
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete workspace?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{deleteTarget?.title}" and all its
+              sources, chats, and artifacts.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (deleteTarget) {
+                  deleteWorkspace.mutate({ id: deleteTarget.id });
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

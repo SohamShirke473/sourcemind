@@ -1,18 +1,11 @@
-import { z } from "zod";
 import { baseProcedure, createTRPCRouter } from "../init";
+import { workspaceRouter } from "./workspace";
 
 export const appRouter = createTRPCRouter({
-  hello: baseProcedure
-    .input(
-      z.object({
-        text: z.string().default("world"),
-      }),
-    )
-    .query(({ input }) => {
-      return {
-        greeting: `hello ${input.text}`,
-      };
-    }),
+  hello: baseProcedure.query(() => {
+    return { greeting: "hello world" };
+  }),
+  workspace: workspaceRouter,
 });
 
 export type AppRouter = typeof appRouter;

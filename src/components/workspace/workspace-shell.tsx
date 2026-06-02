@@ -8,7 +8,18 @@ import { UploadModal } from "@/components/upload/upload-modal";
 import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import { WorkspaceLayout } from "@/components/workspace/workspace-layout";
 
-export function WorkspaceShell() {
+interface Workspace {
+  id: string;
+  title: string;
+  description: string | null;
+  emoji: string | null;
+}
+
+interface WorkspaceShellProps {
+  workspace: Workspace;
+}
+
+export function WorkspaceShell({ workspace }: WorkspaceShellProps) {
   const [uploadOpen, setUploadOpen] = useState(false);
 
   return (
@@ -20,7 +31,7 @@ export function WorkspaceShell() {
         backgroundSize: "24px 24px",
       }}
     >
-      <WorkspaceHeader title="Untitled Workspace" />
+      <WorkspaceHeader workspace={workspace} />
       <WorkspaceLayout
         sources={<SourcesPanel onUploadClick={() => setUploadOpen(true)} />}
         chat={<ChatPanel />}
