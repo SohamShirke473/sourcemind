@@ -1,17 +1,25 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import { z } from "zod";
 import db from "@/db";
 import { workspaces } from "@/db/schema";
 import { authProcedure, createTRPCRouter } from "../init";
 
 export const workspaceRouter = createTRPCRouter({
-  list: authProcedure.query(async ({ ctx }) => {
-    return db
-      .select()
-      .from(workspaces)
-      .where(eq(workspaces.userId, ctx.userId))
-      .orderBy(desc(workspaces.updatedAt));
-  }),
+  list: authProcedure
+    .input(z.object({ search: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const conditions = [eq(workspaces.userId, ctx.userId)];
+      if (input.search) {
+        conditions.push(
+          sql`(${ilike(workspaces.title, `%${input.search}%`)} OR ${ilike(workspaces.description, `%${input.search}%`)})`,
+        );
+      }
+      return db
+        .select()
+        .from(workspaces)
+        .where(and(...conditions))
+        .orderBy(desc(workspaces.updatedAt));
+    }),
 
   getById: authProcedure
     .input(z.object({ id: z.string() }))

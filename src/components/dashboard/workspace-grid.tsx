@@ -37,11 +37,15 @@ function formatRelativeTime(date: Date): string {
   return date.toLocaleDateString();
 }
 
-export function WorkspaceGrid() {
+interface WorkspaceGridProps {
+  search?: string;
+}
+
+export function WorkspaceGrid({ search }: WorkspaceGridProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { data: workspaces, isLoading } = useQuery(
-    trpc.workspace.list.queryOptions(),
+    trpc.workspace.list.queryOptions({ search: search || undefined }),
   );
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [deleteTarget, setDeleteTarget] = useState<{
