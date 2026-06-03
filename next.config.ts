@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["officeparser"],
+  serverExternalPackages: [],
 };
 
 export default nextConfig;

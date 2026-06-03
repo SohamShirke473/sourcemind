@@ -44,7 +44,10 @@ export const processSource = inngest.createFunction(
       } else if (source.type === "pdf" || source.type === "document") {
         if (!source.fileUrl) throw new Error("Missing fileUrl");
         rawContent = await step.run("parse-file", () =>
-          processDocument(source.fileUrl!),
+          processDocument(
+            source.fileUrl!,
+            source.metadata as Record<string, unknown> | null,
+          ),
         );
       } else if (source.type === "code") {
         if (!source.fileUrl) throw new Error("Missing fileUrl");
