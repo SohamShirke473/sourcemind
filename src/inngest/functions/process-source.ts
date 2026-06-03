@@ -1,12 +1,14 @@
 import { eq } from "drizzle-orm";
 import db from "@/db";
-import { sources } from "@/db/schema";
+import { sourceChunks, sources } from "@/db/schema";
 import { inngest } from "../client";
 import { processUrl } from "../processors/url";
 import { processYoutube } from "../processors/youtube";
 import { processDocument } from "../processors/document";
 import { processCode } from "../processors/code";
 import { processImage } from "../processors/image";
+import { chunkText } from "@/lib/chunk";
+import { embedMany } from "ai";
 
 export const processSource = inngest.createFunction(
   { id: "process-source", triggers: { event: "source/created" } },
@@ -69,6 +71,24 @@ export const processSource = inngest.createFunction(
           .update(sources)
           .set({ rawContent, status: "ready", updatedAt: new Date() })
           .where(eq(sources.id, sourceId as string));
+      });
+
+      await step.run("chunk-and-embed", async () => {
+        const chunks = chunkText(rawContent);
+        const { embeddings } = await embedMany({
+          model: "openai/text-embedding-3-small",
+          values: chunks,
+        });
+        await db.insert(sourceChunks).values(
+          chunks.map((text, i) => ({
+            sourceId: sourceId,
+            workspaceId: source.workspaceId,
+            chunkText: text,
+            chunkIndex: i,
+            embedding: embeddings[i],
+            metadata: {},
+          })),
+        );
       });
 
       return { processed: true, type: source.type };
