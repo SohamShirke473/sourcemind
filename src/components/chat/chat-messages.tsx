@@ -4,6 +4,13 @@ import type { UIMessage } from "ai";
 import { ChatBubble } from "./chat-bubble";
 import { ChatEmpty } from "./chat-empty";
 
+interface Citation {
+  sourceTitle: string;
+  sourceType: string;
+  snippet: string;
+  similarity: number;
+}
+
 function extractText(parts: UIMessage["parts"]): string {
   return parts
     .filter((p): p is { type: "text"; text: string } => p.type === "text")
@@ -15,12 +22,14 @@ interface ChatMessagesProps {
   messages: UIMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
   sendMessage: (message: { text: string }) => void;
+  citationsByContent?: Map<string, Citation[]>;
 }
 
 export function ChatMessages({
   messages,
   status,
   sendMessage,
+  citationsByContent,
 }: ChatMessagesProps) {
   if (messages.length === 0) {
     return <ChatEmpty sendMessage={sendMessage} />;
@@ -37,6 +46,11 @@ export function ChatMessages({
             message.role === "assistant" &&
             status === "streaming" &&
             idx === messages.length - 1
+          }
+          sourceCitations={
+            message.role === "assistant"
+              ? citationsByContent?.get(extractText(message.parts))
+              : undefined
           }
         />
       ))}

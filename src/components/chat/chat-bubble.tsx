@@ -1,6 +1,8 @@
 "use client";
 
 import { Loader2Icon } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
 interface ChatBubbleProps {
@@ -34,10 +36,14 @@ export function ChatBubble({
           "max-w-[80%] rounded-ui px-4 py-3 text-sm leading-relaxed",
           isUser
             ? "bg-primary text-primary-foreground"
-            : "border border-border bg-popover text-foreground",
+            : "border border-border bg-popover text-foreground prose prose-sm dark:prose-invert max-w-none",
         )}
       >
-        {content}
+        {isUser ? (
+          content
+        ) : (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        )}
         {isStreaming && (
           <Loader2Icon className="ml-1 inline-block size-3 animate-spin align-middle" />
         )}

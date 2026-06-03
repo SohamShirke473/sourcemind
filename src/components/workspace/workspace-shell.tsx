@@ -95,6 +95,7 @@ export function WorkspaceShell({ workspace }: WorkspaceShellProps) {
               chatId={selectedChatId}
               initialMessages={messagesQuery.data ?? []}
               onTitleChange={handleTitleChange}
+              refetchMessages={() => messagesQuery.refetch()}
             />
           ) : (
             <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">

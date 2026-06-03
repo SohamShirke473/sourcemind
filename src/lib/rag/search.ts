@@ -4,6 +4,7 @@ import db from "@/db";
 import { sourceChunks, sources } from "@/db/schema";
 
 export interface ChunkResult {
+  sourceId: string;
   chunkText: string;
   chunkIndex: number;
   sourceTitle: string;
@@ -26,8 +27,9 @@ export async function searchRelevantChunks(
     embedding,
   )})`;
 
-  return db
+  const results = await db
     .select({
+      sourceId: sources.id,
       chunkText: sourceChunks.chunkText,
       chunkIndex: sourceChunks.chunkIndex,
       sourceTitle: sources.title,
@@ -39,4 +41,14 @@ export async function searchRelevantChunks(
     .where(eq(sourceChunks.workspaceId, workspaceId))
     .orderBy(desc(similarity))
     .limit(limit);
+
+  const seen = new Set<string>();
+  const deduped: ChunkResult[] = [];
+  for (const r of results) {
+    if (!seen.has(r.sourceId)) {
+      seen.add(r.sourceId);
+      deduped.push(r);
+    }
+  }
+  return deduped;
 }
