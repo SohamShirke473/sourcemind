@@ -99,7 +99,10 @@ export const sourceChunks = pgTable(
   (table) => [
     index("source_chunks_source_id_idx").on(table.sourceId),
     index("source_chunks_workspace_id_idx").on(table.workspaceId),
-    // HNSW index — run separately after table creation (see note below)
+    index("embedding_idx").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops"),
+    ),
   ],
 );
 

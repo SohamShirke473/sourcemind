@@ -8,7 +8,11 @@ const SUGGESTED_PROMPTS = [
   "Create a timeline of events mentioned",
 ];
 
-export function ChatEmpty() {
+interface ChatEmptyProps {
+  sendMessage: (message: { text: string }) => void;
+}
+
+export function ChatEmpty({ sendMessage }: ChatEmptyProps) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 px-8 py-16 text-center">
       <div className="flex flex-col items-center gap-2">
@@ -16,7 +20,7 @@ export function ChatEmpty() {
           WHAT WOULD YOU LIKE TO KNOW?
         </h2>
         <p className="text-sm text-muted-foreground">
-          Add sources to get started
+          Ask a question about your sources
         </p>
       </div>
       <div className="flex flex-col gap-2">
@@ -25,6 +29,7 @@ export function ChatEmpty() {
             key={prompt}
             variant="ghost"
             size="sm"
+            onClick={() => sendMessage({ text: prompt })}
             className="rounded-ui border border-secondary/30 text-xs text-secondary hover:bg-muted"
           >
             {prompt}

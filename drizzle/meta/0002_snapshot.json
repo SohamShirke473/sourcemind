@@ -1,6 +1,6 @@
 {
-  "id": "8b87c28b-38d7-4d73-b49e-b73fd55c7803",
-  "prevId": "42a31416-9281-4f3f-886b-1acf3c383be0",
+  "id": "e951df39-61c4-4918-af91-984388cde180",
+  "prevId": "8b87c28b-38d7-4d73-b49e-b73fd55c7803",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -74,11 +74,11 @@
         "artifacts_workspace_id_workspaces_id_fk": {
           "name": "artifacts_workspace_id_workspaces_id_fk",
           "tableFrom": "artifacts",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -131,11 +131,11 @@
         "chats_workspace_id_workspaces_id_fk": {
           "name": "chats_workspace_id_workspaces_id_fk",
           "tableFrom": "chats",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -193,11 +193,11 @@
         "messages_chat_id_chats_id_fk": {
           "name": "messages_chat_id_chats_id_fk",
           "tableFrom": "messages",
-          "tableTo": "chats",
           "columnsFrom": ["chat_id"],
+          "tableTo": "chats",
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -273,9 +273,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "source_chunks_workspace_id_idx": {
           "name": "source_chunks_workspace_id_idx",
@@ -288,29 +288,29 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "source_chunks_source_id_sources_id_fk": {
           "name": "source_chunks_source_id_sources_id_fk",
           "tableFrom": "source_chunks",
-          "tableTo": "sources",
           "columnsFrom": ["source_id"],
+          "tableTo": "sources",
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "source_chunks_workspace_id_workspaces_id_fk": {
           "name": "source_chunks_workspace_id_workspaces_id_fk",
           "tableFrom": "source_chunks",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -401,11 +401,11 @@
         "sources_workspace_id_workspaces_id_fk": {
           "name": "sources_workspace_id_workspaces_id_fk",
           "tableFrom": "sources",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -510,10 +510,10 @@
     }
   },
   "schemas": {},
+  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

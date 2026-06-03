@@ -1,14 +1,14 @@
+import { embedMany } from "ai";
 import { eq } from "drizzle-orm";
 import db from "@/db";
 import { sourceChunks, sources } from "@/db/schema";
+import { chunkText } from "@/lib/chunk";
 import { inngest } from "../client";
+import { processCode } from "../processors/code";
+import { processDocument } from "../processors/document";
+import { processImage } from "../processors/image";
 import { processUrl } from "../processors/url";
 import { processYoutube } from "../processors/youtube";
-import { processDocument } from "../processors/document";
-import { processCode } from "../processors/code";
-import { processImage } from "../processors/image";
-import { chunkText } from "@/lib/chunk";
-import { embedMany } from "ai";
 
 export const processSource = inngest.createFunction(
   { id: "process-source", triggers: { event: "source/created" } },
@@ -60,6 +60,9 @@ export const processSource = inngest.createFunction(
             source.title,
           ),
         );
+      } else if (source.type === "text") {
+        if (!source.rawContent) throw new Error("Missing rawContent");
+        rawContent = source.rawContent;
       } else if (source.type === "image") {
         rawContent = processImage(source.title, source.fileUrl);
       } else {

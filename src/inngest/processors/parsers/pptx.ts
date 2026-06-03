@@ -1,7 +1,7 @@
-import { tmpdir } from "os";
-import { mkdtempSync, writeFileSync, rmSync } from "fs";
-import { join } from "path";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import PptxParser from "node-pptx-parser";
+import { tmpdir } from "os";
+import { join } from "path";
 
 export async function parsePptx(buffer: Buffer): Promise<string> {
   const tmpDir = mkdtempSync(join(tmpdir(), "pptx-"));

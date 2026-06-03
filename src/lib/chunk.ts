@@ -2,7 +2,10 @@ import { encoding_for_model } from "tiktoken";
 
 const SEPARATORS = ["\n\n\n", "\n\n", "\n", ". ", " "];
 
-function tokenCount(enc: ReturnType<typeof encoding_for_model>, text: string): number {
+function tokenCount(
+  enc: ReturnType<typeof encoding_for_model>,
+  text: string,
+): number {
   return enc.encode(text).length;
 }
 
@@ -66,7 +69,10 @@ export function chunkText(
       for (let i = 1; i < chunks.length; i++) {
         const prevTokens = enc.encode(chunks[i - 1]);
         if (prevTokens.length > overlapTokens) {
-          chunks[i] = new TextDecoder().decode(enc.decode(prevTokens.slice(-overlapTokens))) + chunks[i];
+          chunks[i] =
+            new TextDecoder().decode(
+              enc.decode(prevTokens.slice(-overlapTokens)),
+            ) + chunks[i];
         }
       }
     }

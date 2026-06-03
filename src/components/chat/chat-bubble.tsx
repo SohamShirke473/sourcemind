@@ -1,14 +1,26 @@
 "use client";
 
+import { Loader2Icon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatBubbleProps {
   role: "user" | "assistant";
   content: string;
-  timestamp: string;
+  isStreaming?: boolean;
+  sourceCitations?: Array<{
+    sourceTitle: string;
+    sourceType: string;
+    snippet: string;
+    similarity: number;
+  }>;
 }
 
-export function ChatBubble({ role, content, timestamp }: ChatBubbleProps) {
+export function ChatBubble({
+  role,
+  content,
+  isStreaming,
+  sourceCitations,
+}: ChatBubbleProps) {
   const isUser = role === "user";
   return (
     <div
@@ -26,10 +38,25 @@ export function ChatBubble({ role, content, timestamp }: ChatBubbleProps) {
         )}
       >
         {content}
+        {isStreaming && (
+          <Loader2Icon className="ml-1 inline-block size-3 animate-spin align-middle" />
+        )}
       </div>
-      <span className="px-1 text-[10px] text-muted-foreground">
-        {timestamp}
-      </span>
+      {!isUser && sourceCitations && sourceCitations.length > 0 && (
+        <div className="flex flex-col gap-1 px-1">
+          <span className="text-[10px] font-medium text-muted-foreground">
+            Sources
+          </span>
+          {sourceCitations.map((cite, i) => (
+            <span
+              key={`${cite.sourceTitle}-${i}`}
+              className="text-[10px] text-muted-foreground/70 leading-tight"
+            >
+              [{i + 1}] {cite.sourceTitle}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

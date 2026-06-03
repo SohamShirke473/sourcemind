@@ -72,8 +72,6 @@ export const sourceRouter = createTRPCRouter({
         });
       }
 
-      const isReady = input.type === "text";
-
       const [source] = await db
         .insert(sources)
         .values({
@@ -82,16 +80,14 @@ export const sourceRouter = createTRPCRouter({
           title: input.title,
           sourceUrl: input.sourceUrl ?? null,
           rawContent: input.rawContent ?? null,
-          status: isReady ? "ready" : "processing",
+          status: "processing",
         })
         .returning();
 
-      if (!isReady) {
-        await inngest.send({
-          name: "source/created",
-          data: { sourceId: source.id, workspaceId: source.workspaceId },
-        });
-      }
+      await inngest.send({
+        name: "source/created",
+        data: { sourceId: source.id, workspaceId: source.workspaceId },
+      });
 
       return source;
     }),

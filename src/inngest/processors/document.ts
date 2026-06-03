@@ -1,6 +1,6 @@
 import { downloadFileBuffer } from "@/lib/r2";
-import { parsePdf } from "./parsers/pdf";
 import { parseDocx } from "./parsers/docx";
+import { parsePdf } from "./parsers/pdf";
 import { parsePptx } from "./parsers/pptx";
 
 function getExtension(fileName: string): string {

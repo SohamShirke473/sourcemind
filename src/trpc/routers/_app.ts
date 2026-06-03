@@ -1,4 +1,5 @@
 import { baseProcedure, createTRPCRouter } from "../init";
+import { chatRouter } from "./chat";
 import { sourceRouter } from "./source";
 import { workspaceRouter } from "./workspace";
 
@@ -8,6 +9,7 @@ export const appRouter = createTRPCRouter({
   }),
   workspace: workspaceRouter,
   source: sourceRouter,
+  chat: chatRouter,
 });
 
 export type AppRouter = typeof appRouter;
