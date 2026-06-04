@@ -6,17 +6,7 @@ import { sources, workspaces } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { deleteFile, getUploadUrl as r2GetUploadUrl } from "@/lib/r2";
 import { authProcedure, createTRPCRouter } from "../init";
-
-async function assertWorkspaceOwnership(workspaceId: string, userId: string) {
-  const [workspace] = await db
-    .select({ id: workspaces.id })
-    .from(workspaces)
-    .where(and(eq(workspaces.id, workspaceId), eq(workspaces.userId, userId)))
-    .limit(1);
-  if (!workspace) {
-    throw new TRPCError({ code: "NOT_FOUND" });
-  }
-}
+import { assertWorkspaceOwnership } from "../utils";
 
 function getSourceTypeFromFileName(fileName: string): string {
   const ext = fileName.split(".").pop()?.toLowerCase() || "";
@@ -100,7 +90,8 @@ export const sourceRouter = createTRPCRouter({
         contentType: z.string(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      await assertWorkspaceOwnership(input.workspaceId, ctx.userId);
       const key = `workspaces/${input.workspaceId}/sources/${crypto.randomUUID()}-${input.fileName}`;
       const uploadUrl = await r2GetUploadUrl(key, input.contentType);
 

@@ -1,19 +1,10 @@
-import { and, desc, eq } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import db from "@/db";
-import { chats, messages, workspaces } from "@/db/schema";
+import { chats, messages } from "@/db/schema";
 import { authProcedure, createTRPCRouter } from "../init";
-
-async function assertWorkspaceOwnership(workspaceId: string, userId: string) {
-  const [workspace] = await db
-    .select({ id: workspaces.id })
-    .from(workspaces)
-    .where(and(eq(workspaces.id, workspaceId), eq(workspaces.userId, userId)))
-    .limit(1);
-  if (!workspace) {
-    throw new Error("Workspace not found");
-  }
-}
+import { assertWorkspaceOwnership } from "../utils";
 
 export const chatRouter = createTRPCRouter({
   list: authProcedure
@@ -54,7 +45,7 @@ export const chatRouter = createTRPCRouter({
         .from(chats)
         .where(eq(chats.id, input.id))
         .limit(1);
-      if (!chat) throw new Error("Chat not found");
+      if (!chat) throw new TRPCError({ code: "NOT_FOUND" });
       await assertWorkspaceOwnership(chat.workspaceId, ctx.userId);
       await db.delete(chats).where(eq(chats.id, input.id));
       return { success: true };
@@ -74,7 +65,7 @@ export const chatRouter = createTRPCRouter({
         .from(chats)
         .where(eq(chats.id, input.chatId))
         .limit(1);
-      if (!chat) throw new Error("Chat not found");
+      if (!chat) throw new TRPCError({ code: "NOT_FOUND" });
       await assertWorkspaceOwnership(chat.workspaceId, ctx.userId);
 
       const rows = await db

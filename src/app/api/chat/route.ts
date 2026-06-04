@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { convertToModelMessages, streamText } from "ai";
 import { and, eq } from "drizzle-orm";
 import db from "@/db";
-import { chats, messages } from "@/db/schema";
+import { chats, messages, workspaces } from "@/db/schema";
 import { buildSystemPrompt } from "@/lib/rag/prompt";
 import { searchRelevantChunks } from "@/lib/rag/search";
 
@@ -26,6 +26,24 @@ export async function POST(req: Request) {
   };
 
   const { messages: uiMessages, workspaceId, chatId } = body;
+
+  const [workspace] = await db
+    .select({ id: workspaces.id })
+    .from(workspaces)
+    .where(and(eq(workspaces.id, workspaceId), eq(workspaces.userId, userId)))
+    .limit(1);
+  if (!workspace) {
+    return new Response("Not found", { status: 403 });
+  }
+
+  const [chat] = await db
+    .select({ id: chats.id })
+    .from(chats)
+    .where(and(eq(chats.id, chatId), eq(chats.workspaceId, workspaceId)))
+    .limit(1);
+  if (!chat) {
+    return new Response("Not found", { status: 403 });
+  }
 
   // biome-ignore lint/suspicious/noExplicitAny: the incoming UIMessage shape is correct
   const modelMessages = await convertToModelMessages(uiMessages as any);
