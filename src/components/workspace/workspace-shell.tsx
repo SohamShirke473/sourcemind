@@ -42,13 +42,6 @@ export function WorkspaceShell({ workspace }: WorkspaceShellProps) {
     }),
   );
 
-  const messagesQuery = useQuery(
-    trpc.chat.getMessages.queryOptions(
-      { chatId: selectedChatId ?? "" },
-      { enabled: !!selectedChatId },
-    ),
-  );
-
   useEffect(() => {
     const chats = chatsQuery.data;
     if (chats && chats.length > 0 && !selectedChatId) {
@@ -93,9 +86,7 @@ export function WorkspaceShell({ workspace }: WorkspaceShellProps) {
             <ChatPanel
               workspaceId={workspace.id}
               chatId={selectedChatId}
-              initialMessages={messagesQuery.data ?? []}
               onTitleChange={handleTitleChange}
-              refetchMessages={() => messagesQuery.refetch()}
             />
           ) : (
             <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">

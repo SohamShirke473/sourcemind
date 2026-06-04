@@ -61,7 +61,13 @@ export const chatRouter = createTRPCRouter({
     }),
 
   getMessages: authProcedure
-    .input(z.object({ chatId: z.string() }))
+    .input(
+      z.object({
+        chatId: z.string(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const [chat] = await db
         .select({ workspaceId: chats.workspaceId })
@@ -71,10 +77,18 @@ export const chatRouter = createTRPCRouter({
       if (!chat) throw new Error("Chat not found");
       await assertWorkspaceOwnership(chat.workspaceId, ctx.userId);
 
-      return db
+      const rows = await db
         .select()
         .from(messages)
         .where(eq(messages.chatId, input.chatId))
-        .orderBy(messages.createdAt);
+        .orderBy(desc(messages.createdAt))
+        .limit(input.limit + 1)
+        .offset(input.offset);
+
+      const hasMore = rows.length > input.limit;
+      const result = hasMore ? rows.slice(0, input.limit) : rows;
+      result.reverse();
+
+      return { messages: result, hasMore };
     }),
 });
