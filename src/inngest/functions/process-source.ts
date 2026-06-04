@@ -79,7 +79,7 @@ export const processSource = inngest.createFunction(
       await step.run("chunk-and-embed", async () => {
         const chunks = chunkText(rawContent);
         const { embeddings } = await embedMany({
-          model: "openai/text-embedding-3-small",
+          model: "voyage/voyage-4-lite",
           values: chunks,
         });
         await db.insert(sourceChunks).values(

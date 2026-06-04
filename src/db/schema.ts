@@ -92,7 +92,7 @@ export const sourceChunks = pgTable(
       .references(() => workspaces.id, { onDelete: "cascade" }),
     chunkText: text("chunk_text").notNull(),
     chunkIndex: integer("chunk_index").notNull(), // order within source
-    embedding: vector("embedding", { dimensions: 1536 }),
+    embedding: vector("embedding", { dimensions: 1024 }),
     metadata: jsonb("metadata"), // page number, timestamp, etc.
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },

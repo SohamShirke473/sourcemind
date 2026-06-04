@@ -18,7 +18,7 @@ export async function searchRelevantChunks(
   limit = 6,
 ): Promise<ChunkResult[]> {
   const { embedding } = await embed({
-    model: "openai/text-embedding-3-small",
+    model: "voyage/voyage-4-lite",
     value: query,
   });
 
