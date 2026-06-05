@@ -1,21 +1,31 @@
 "use client";
 
-import { SparklesIcon } from "lucide-react";
+import {
+  BrainCircuitIcon,
+  CircleHelpIcon,
+  FileTextIcon,
+  HeadphonesIcon,
+  LayersIcon,
+  PresentationIcon,
+  SparklesIcon,
+} from "lucide-react";
 import { useState } from "react";
-import { PillButton } from "@/components/ui/pill-button";
 import { Spinner } from "@/components/ui/spinner";
-import { cn } from "@/lib/utils";
 
-const ARTIFACT_TYPES = [
-  "MIND MAP",
-  "FLASHCARDS",
-  "AUDIO",
-  "PPT",
-  "VIDEO",
-  "QUIZ",
-  "INFOGRAPHIC",
-  "SUMMARY",
-] as const;
+interface ArtifactTypeConfig {
+  id: string;
+  label: string;
+  icon: typeof PresentationIcon;
+}
+
+const ARTIFACT_TYPES: ArtifactTypeConfig[] = [
+  { id: "ppt", label: "PPT", icon: PresentationIcon },
+  { id: "audio", label: "AUDIO", icon: HeadphonesIcon },
+  { id: "mindmap", label: "MIND MAP", icon: BrainCircuitIcon },
+  { id: "flashcard", label: "FLASHCARDS", icon: LayersIcon },
+  { id: "quiz", label: "QUIZ", icon: CircleHelpIcon },
+  { id: "report", label: "REPORT", icon: FileTextIcon },
+];
 
 interface ArtifactCardData {
   id: string;
@@ -27,8 +37,8 @@ interface ArtifactCardData {
 const MOCK_ARTIFACTS: ArtifactCardData[] = [
   {
     id: "1",
-    type: "SUMMARY",
-    title: "Document Overview Summary",
+    type: "REPORT",
+    title: "Document Overview Report",
     timestamp: "5 min ago",
   },
   {
@@ -42,16 +52,14 @@ const MOCK_ARTIFACTS: ArtifactCardData[] = [
 import { ArtifactDetailModal } from "./artifact-detail-modal";
 
 export function ArtifactsPanel() {
-  const [activeType, setActiveType] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
+  const [generatingType, setGeneratingType] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedArtifact, setSelectedArtifact] =
     useState<ArtifactCardData | null>(null);
 
-  const handleGenerate = () => {
-    if (!activeType) return;
-    setGenerating(true);
-    setTimeout(() => setGenerating(false), 2000);
+  const handleGenerate = (typeId: string) => {
+    setGeneratingType(typeId);
+    setTimeout(() => setGeneratingType(null), 2000);
   };
 
   const handleCardClick = (artifact: ArtifactCardData) => {
@@ -61,41 +69,29 @@ export function ArtifactsPanel() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <div className="border-b border-border px-4 py-3">
         <span className="text-xs font-bold uppercase tracking-[0.05em] text-foreground">
           ARTIFACTS
         </span>
-        <PillButton
-          variant="secondary"
-          size="sm"
-          onClick={handleGenerate}
-          disabled={!activeType || generating}
-        >
-          {generating ? (
-            <>
-              <Spinner className="size-3" />
-              GENERATING...
-            </>
-          ) : (
-            "GENERATE"
-          )}
-        </PillButton>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto border-b border-border px-4 py-3">
-        {ARTIFACT_TYPES.map((type) => (
+      <div className="grid grid-cols-2 gap-3 border-b border-border px-4 py-4">
+        {ARTIFACT_TYPES.map(({ id, label, icon: Icon }) => (
           <button
-            key={type}
+            key={id}
             type="button"
-            onClick={() => setActiveType(type)}
-            className={cn(
-              "shrink-0 rounded-ui px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] transition-all",
-              activeType === type
-                ? "bg-primary text-primary-foreground"
-                : "border border-border bg-card text-foreground hover:bg-muted",
-            )}
+            onClick={() => handleGenerate(id)}
+            disabled={generatingType !== null}
+            className="flex flex-col items-center justify-center gap-2 rounded-ui border border-border bg-card px-4 py-5 transition-all hover:border-primary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {type}
+            {generatingType === id ? (
+              <Spinner className="size-6" />
+            ) : (
+              <Icon className="size-6 text-muted-foreground" />
+            )}
+            <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-foreground">
+              {label}
+            </span>
           </button>
         ))}
       </div>
@@ -126,15 +122,12 @@ export function ArtifactsPanel() {
           <SparklesIcon className="size-8 text-muted-foreground" />
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold uppercase tracking-[0.05em] text-foreground">
-              GENERATE YOUR FIRST ARTIFACT
+              NO ARTIFACTS YET
             </span>
             <span className="text-xs text-muted-foreground">
-              Select an artifact type and click generate
+              Click an artifact type above to generate one
             </span>
           </div>
-          <PillButton variant="primary" size="sm">
-            GET STARTED
-          </PillButton>
         </div>
       )}
 

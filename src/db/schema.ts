@@ -32,14 +32,12 @@ export const sourceStatusEnum = pgEnum("source_status", [
 ]);
 
 export const artifactTypeEnum = pgEnum("artifact_type", [
+  "ppt",
+  "audio",
   "mindmap",
   "flashcard",
-  "audio",
-  "ppt",
-  "video",
   "quiz",
-  "infographic",
-  "summary",
+  "report",
 ]);
 
 export const artifactStatusEnum = pgEnum("artifact_status", [
@@ -143,7 +141,7 @@ export const artifacts = pgTable("artifacts", {
   type: artifactTypeEnum("type").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   content: jsonb("content"), // structured data — flashcard array, mindmap nodes, etc.
-  fileUrl: text("file_url"), // for audio / ppt / video — R2 URL
+  fileUrl: text("file_url"), // for audio / ppt — R2 URL
   status: artifactStatusEnum("status").notNull().default("generating"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
