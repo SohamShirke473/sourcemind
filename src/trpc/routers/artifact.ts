@@ -1,0 +1,85 @@
+import { TRPCError } from "@trpc/server";
+import { desc, eq } from "drizzle-orm";
+import { z } from "zod";
+import db from "@/db";
+import { artifacts } from "@/db/schema";
+import { inngest } from "@/inngest/client";
+import { authProcedure, createTRPCRouter } from "../init";
+import { assertWorkspaceOwnership } from "../utils";
+
+const artifactTypeEnum = z.enum([
+  "ppt",
+  "audio",
+  "mindmap",
+  "flashcard",
+  "quiz",
+  "report",
+]);
+
+export const artifactRouter = createTRPCRouter({
+  list: authProcedure
+    .input(z.object({ workspaceId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      await assertWorkspaceOwnership(input.workspaceId, ctx.userId);
+      return db
+        .select()
+        .from(artifacts)
+        .where(eq(artifacts.workspaceId, input.workspaceId))
+        .orderBy(desc(artifacts.createdAt));
+    }),
+
+  generate: authProcedure
+    .input(
+      z.object({
+        workspaceId: z.string(),
+        type: artifactTypeEnum,
+        title: z.string().max(255),
+        sourceIds: z.array(z.string()),
+        prompt: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertWorkspaceOwnership(input.workspaceId, ctx.userId);
+
+      const [artifact] = await db
+        .insert(artifacts)
+        .values({
+          workspaceId: input.workspaceId,
+          type: input.type,
+          title: input.title,
+          status: "generating",
+        })
+        .returning();
+
+      await inngest.send({
+        name: "artifact/generate",
+        data: {
+          artifactId: artifact.id,
+          workspaceId: input.workspaceId,
+          sourceIds: input.sourceIds,
+          prompt: input.prompt ?? "",
+        },
+      });
+
+      return artifact;
+    }),
+
+  delete: authProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const [artifact] = await db
+        .select()
+        .from(artifacts)
+        .where(eq(artifacts.id, input.id))
+        .limit(1);
+
+      if (!artifact) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      await assertWorkspaceOwnership(artifact.workspaceId, ctx.userId);
+
+      await db.delete(artifacts).where(eq(artifacts.id, input.id));
+      return { success: true };
+    }),
+});

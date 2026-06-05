@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BrainCircuitIcon,
   CircleHelpIcon,
@@ -8,14 +9,21 @@ import {
   LayersIcon,
   PresentationIcon,
   SparklesIcon,
+  Trash2Icon,
+  type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
+import { useTRPC } from "@/trpc/client";
+import { ArtifactDetailModal } from "./artifact-detail-modal";
+import { GenerateArtifactDialog } from "./generate-artifact-dialog";
 
 interface ArtifactTypeConfig {
   id: string;
   label: string;
-  icon: typeof PresentationIcon;
+  icon: LucideIcon;
 }
 
 const ARTIFACT_TYPES: ArtifactTypeConfig[] = [
@@ -27,43 +35,98 @@ const ARTIFACT_TYPES: ArtifactTypeConfig[] = [
   { id: "report", label: "REPORT", icon: FileTextIcon },
 ];
 
-interface ArtifactCardData {
-  id: string;
-  type: string;
-  title: string;
-  timestamp: string;
+const TYPE_LABEL_MAP: Record<string, string> = {
+  ppt: "PPT",
+  audio: "AUDIO",
+  mindmap: "MIND MAP",
+  flashcard: "FLASHCARDS",
+  quiz: "QUIZ",
+  report: "REPORT",
+};
+
+function timeAgo(date: Date): string {
+  const secs = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (secs < 60) return "just now";
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs > 1 ? "s" : ""} ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
-const MOCK_ARTIFACTS: ArtifactCardData[] = [
-  {
-    id: "1",
-    type: "REPORT",
-    title: "Document Overview Report",
-    timestamp: "5 min ago",
-  },
-  {
-    id: "2",
-    type: "FLASHCARDS",
-    title: "Key Concepts Flashcards",
-    timestamp: "2 hours ago",
-  },
-];
+interface ArtifactsPanelProps {
+  workspaceId: string;
+}
 
-import { ArtifactDetailModal } from "./artifact-detail-modal";
-
-export function ArtifactsPanel() {
-  const [generatingType, setGeneratingType] = useState<string | null>(null);
+export function ArtifactsPanel({ workspaceId }: ArtifactsPanelProps) {
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [generateType, setGenerateType] = useState<string>("mindmap");
   const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedArtifact, setSelectedArtifact] =
-    useState<ArtifactCardData | null>(null);
+  const [selectedArtifact, setSelectedArtifact] = useState<{
+    id: string;
+    type: string;
+    title: string;
+    content?: { nodes?: unknown[]; edges?: unknown[] } | null;
+    status: string;
+    createdAt: Date;
+  } | null>(null);
+
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+
+  const artifactsQuery = useQuery(
+    trpc.artifact.list.queryOptions({ workspaceId }),
+  );
+  const artifacts = artifactsQuery.data ?? [];
+
+  const isProcessing = artifacts.some(
+    (a) => a.status === "generating",
+  );
+
+  useEffect(() => {
+    if (isProcessing) {
+      const interval = setInterval(() => {
+        queryClient.invalidateQueries(
+          trpc.artifact.list.queryFilter({ workspaceId }),
+        );
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [isProcessing, queryClient, trpc, workspaceId]);
+
+  const deleteArtifact = useMutation(
+    trpc.artifact.delete.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries(
+          trpc.artifact.list.queryFilter({ workspaceId }),
+        );
+        toast.success("Artifact deleted");
+      },
+      onError: (err) => {
+        toast.error(err.message ?? "Failed to delete artifact");
+      },
+    }),
+  );
 
   const handleGenerate = (typeId: string) => {
-    setGeneratingType(typeId);
-    setTimeout(() => setGeneratingType(null), 2000);
+    setGenerateType(typeId);
+    setGenerateOpen(true);
   };
 
-  const handleCardClick = (artifact: ArtifactCardData) => {
-    setSelectedArtifact(artifact);
+  const handleCardClick = (artifact: (typeof artifacts)[number]) => {
+    const content = artifact.content as
+      | { nodes?: unknown[]; edges?: unknown[] }
+      | null
+      | undefined;
+    setSelectedArtifact({
+      id: artifact.id,
+      type: TYPE_LABEL_MAP[artifact.type] ?? artifact.type,
+      title: artifact.title,
+      content,
+      status: artifact.status,
+      createdAt: artifact.createdAt,
+    });
     setDetailOpen(true);
   };
 
@@ -81,14 +144,9 @@ export function ArtifactsPanel() {
             key={id}
             type="button"
             onClick={() => handleGenerate(id)}
-            disabled={generatingType !== null}
-            className="flex flex-col items-center justify-center gap-2 rounded-ui border border-border bg-card px-4 py-5 transition-all hover:border-primary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex flex-col items-center justify-center gap-2 rounded-ui border border-border bg-card px-4 py-5 transition-all hover:border-primary hover:bg-muted"
           >
-            {generatingType === id ? (
-              <Spinner className="size-6" />
-            ) : (
-              <Icon className="size-6 text-muted-foreground" />
-            )}
+            <Icon className="size-6 text-muted-foreground" />
             <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-foreground">
               {label}
             </span>
@@ -96,25 +154,49 @@ export function ArtifactsPanel() {
         ))}
       </div>
 
-      {MOCK_ARTIFACTS.length > 0 ? (
+      {artifacts.length > 0 ? (
         <div className="flex flex-col gap-2 px-4 py-4">
-          {MOCK_ARTIFACTS.map((artifact) => (
-            <button
+          {artifacts.map((artifact) => (
+            <div
               key={artifact.id}
-              type="button"
-              onClick={() => handleCardClick(artifact)}
-              className="flex flex-col gap-2 rounded-ui border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary"
+              className="group relative"
             >
-              <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-primary">
-                {artifact.type}
-              </span>
-              <span className="text-sm font-semibold text-foreground">
-                {artifact.title}
-              </span>
-              <span className="text-[10px] text-muted-foreground">
-                {artifact.timestamp}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => handleCardClick(artifact)}
+                className="flex w-full flex-col gap-2 rounded-ui border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-primary">
+                    {TYPE_LABEL_MAP[artifact.type] ?? artifact.type}
+                  </span>
+                  {artifact.status === "generating" && (
+                    <Spinner className="size-3" />
+                  )}
+                  {artifact.status === "failed" && (
+                    <span className="text-[10px] font-bold uppercase text-red-500">
+                      Failed
+                    </span>
+                  )}
+                </div>
+                <span className="text-sm font-semibold text-foreground">
+                  {artifact.title}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {artifact.status === "generating"
+                    ? "Generating..."
+                    : timeAgo(artifact.createdAt)}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteArtifact.mutate({ id: artifact.id })}
+                className="absolute right-2 top-2 hidden rounded-ui p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground group-hover:block"
+                aria-label="Delete artifact"
+              >
+                <Trash2Icon className="size-3.5" />
+              </button>
+            </div>
           ))}
         </div>
       ) : (
@@ -131,12 +213,21 @@ export function ArtifactsPanel() {
         </div>
       )}
 
+      <GenerateArtifactDialog
+        open={generateOpen}
+        onOpenChange={setGenerateOpen}
+        artifactType={generateType}
+        workspaceId={workspaceId}
+      />
+
       {selectedArtifact && (
         <ArtifactDetailModal
           open={detailOpen}
           onOpenChange={setDetailOpen}
           type={selectedArtifact.type}
           title={selectedArtifact.title}
+          content={selectedArtifact.content}
+          status={selectedArtifact.status}
         />
       )}
     </div>

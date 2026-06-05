@@ -8,12 +8,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MindmapViewer } from "./mindmap-viewer";
 
 interface ArtifactDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: string;
   title: string;
+  content?: { nodes?: unknown[]; edges?: unknown[] } | null;
+  status: string;
 }
 
 export function ArtifactDetailModal({
@@ -21,12 +24,55 @@ export function ArtifactDetailModal({
   onOpenChange,
   type,
   title,
+  content,
+  status,
 }: ArtifactDetailModalProps) {
+  const isMindMap = type === "MIND MAP" || type === "mindmap";
+
+  const renderContent = () => {
+    if (status === "generating") {
+      return (
+        <p className="text-sm text-muted-foreground">
+          This artifact is still being generated. Check back shortly.
+        </p>
+      );
+    }
+
+    if (status === "failed") {
+      return (
+        <p className="text-sm text-red-500">
+          Generation failed. Please try again.
+        </p>
+      );
+    }
+
+    if (isMindMap && content?.nodes && content?.edges) {
+      return (
+        <MindmapViewer
+          nodes={content.nodes as { id: string; label: string; parentId: string | null }[]}
+          edges={content.edges as { from: string; to: string; label?: string }[]}
+        />
+      );
+    }
+
+    return (
+      <p className="text-sm leading-relaxed text-foreground">
+        Artifact content will appear here once generated. This is a detailed
+        view of the {type.toLowerCase()} artifact named &ldquo;{title}&rdquo;.
+      </p>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[720px] sm:max-w-[720px] gap-0 p-0"
+        className={
+          isMindMap
+            ? "max-w-[90vw] sm:max-w-[90vw] gap-0 overflow-hidden p-0"
+            : "max-w-[720px] sm:max-w-[720px] gap-0 p-0"
+        }
         showCloseButton={false}
+        style={isMindMap ? { height: "80vh" } : undefined}
       >
         <DialogHeader className="flex flex-row items-center justify-between border-b border-border px-6 py-4">
           <div className="flex items-center gap-3">
@@ -46,12 +92,8 @@ export function ArtifactDetailModal({
             <XIcon className="size-4" />
           </Button>
         </DialogHeader>
-        <div className="flex flex-col gap-4 px-6 py-6">
-          <p className="text-sm leading-relaxed text-foreground">
-            Artifact content will appear here once generated. This is a detailed
-            view of the {type.toLowerCase()} artifact named &ldquo;{title}
-            &rdquo;.
-          </p>
+        <div style={isMindMap ? { height: "calc(80vh - 57px)" } : undefined}>
+          {renderContent()}
         </div>
       </DialogContent>
     </Dialog>

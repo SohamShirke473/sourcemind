@@ -94,7 +94,7 @@ export function WorkspaceShell({ workspace }: WorkspaceShellProps) {
             </div>
           )
         }
-        artifacts={<ArtifactsPanel />}
+        artifacts={<ArtifactsPanel workspaceId={workspace.id} />}
       />
       <UploadModal
         open={uploadOpen}
