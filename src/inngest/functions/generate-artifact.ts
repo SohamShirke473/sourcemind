@@ -6,6 +6,7 @@ import { artifacts, sources } from "@/db/schema";
 import { inngest } from "../client";
 
 const mindMapSchema = z.object({
+  title: z.string(),
   nodes: z.array(
     z.object({
       id: z.string(),
@@ -23,6 +24,7 @@ const mindMapSchema = z.object({
 });
 
 const flashcardSchema = z.object({
+  title: z.string(),
   cards: z
     .array(
       z.object({
@@ -35,6 +37,7 @@ const flashcardSchema = z.object({
 });
 
 const quizSchema = z.object({
+  title: z.string(),
   questions: z
     .array(
       z.object({
@@ -49,6 +52,7 @@ const quizSchema = z.object({
 });
 
 const reportSchema = z.object({
+  title: z.string(),
   report: z.string(),
 });
 
@@ -57,6 +61,7 @@ function buildMindMapPrompt(sourceContent: string, userPrompt: string): string {
 
 The JSON must have this exact structure:
 {
+  "title": "Descriptive title here",
   "nodes": [
     { "id": "1", "label": "Central Topic", "parentId": null },
     { "id": "2", "label": "Subtopic 1", "parentId": "1" }
@@ -67,6 +72,7 @@ The JSON must have this exact structure:
 }
 
 Requirements:
+- title: A concise, descriptive title for the mind map (max 6 words)
 - The first node (parentId: null) is the root/central topic
 - Each node needs id (string), label (short text), parentId (string or null)
 - Each edge connects from one node to another with an optional label
@@ -90,6 +96,7 @@ function buildFlashcardPrompt(
 
 The JSON must have this exact structure:
 {
+  "title": "Descriptive title here",
   "cards": [
     { "front": "Question or term", "back": "Answer or definition" },
     { "front": "Question or term", "back": "Answer or definition" }
@@ -97,6 +104,7 @@ The JSON must have this exact structure:
 }
 
 Requirements:
+- title: A concise, descriptive title for the flashcards (max 6 words)
 - Generate 5-20 flashcards covering the key concepts from the source
 - Front should be a concise question, term, or prompt
 - Back should be a clear, complete answer or definition
@@ -117,6 +125,7 @@ function buildQuizPrompt(sourceContent: string, userPrompt: string): string {
 
 The JSON must have this exact structure:
 {
+  "title": "Descriptive title here",
   "questions": [
     {
       "question": "What is the capital of France?",
@@ -128,6 +137,7 @@ The JSON must have this exact structure:
 }
 
 Requirements:
+- title: A concise, descriptive title for the quiz (max 6 words)
 - Generate 5-15 multiple-choice questions covering key concepts from the source
 - Each question must have exactly 4 options
 - correctIndex must be 0, 1, 2, or 3 (the index of the correct option)
@@ -149,10 +159,12 @@ function buildReportPrompt(sourceContent: string, userPrompt: string): string {
 
 The JSON must have this exact structure:
 {
+  "title": "Descriptive title here",
   "report": "Your detailed report content formatted in Markdown"
 }
 
 Requirements:
+- title: A concise, descriptive title for the report (max 6 words)
 - Generate a well-structured report covering the key concepts from the source
 - Use Markdown formatting (headings, bullet points, bold text)
 - Include an introduction, body paragraphs with subheadings, and a conclusion
@@ -223,6 +235,7 @@ export const generateArtifact = inngest.createFunction(
             .update(artifacts)
             .set({
               content: parsed,
+              title: parsed.title,
               status: "ready",
               updatedAt: new Date(),
             })
@@ -252,6 +265,7 @@ export const generateArtifact = inngest.createFunction(
             .update(artifacts)
             .set({
               content: parsed,
+              title: parsed.title,
               status: "ready",
               updatedAt: new Date(),
             })
@@ -278,6 +292,7 @@ export const generateArtifact = inngest.createFunction(
             .update(artifacts)
             .set({
               content: parsed,
+              title: parsed.title,
               status: "ready",
               updatedAt: new Date(),
             })
@@ -304,6 +319,7 @@ export const generateArtifact = inngest.createFunction(
             .update(artifacts)
             .set({
               content: parsed,
+              title: parsed.title,
               status: "ready",
               updatedAt: new Date(),
             })
