@@ -10,11 +10,7 @@ interface SearchInputProps {
   className?: string;
 }
 
-export function SearchInput({
-  value,
-  onChange,
-  className,
-}: SearchInputProps) {
+export function SearchInput({ value, onChange, className }: SearchInputProps) {
   return (
     <div className={cn("relative", className)}>
       <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
