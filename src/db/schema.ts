@@ -38,6 +38,8 @@ export const artifactTypeEnum = pgEnum("artifact_type", [
   "ppt",
   "video",
   "quiz",
+  "infographic",
+  "summary",
 ]);
 
 export const artifactStatusEnum = pgEnum("artifact_status", [

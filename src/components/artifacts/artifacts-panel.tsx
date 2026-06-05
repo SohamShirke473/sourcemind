@@ -7,11 +7,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 const ARTIFACT_TYPES = [
-  "SUMMARY",
   "MIND MAP",
-  "QUIZ",
   "FLASHCARDS",
-  "TIMELINE",
+  "AUDIO",
+  "PPT",
+  "VIDEO",
+  "QUIZ",
+  "INFOGRAPHIC",
+  "SUMMARY",
 ] as const;
 
 interface ArtifactCardData {
