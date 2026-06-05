@@ -66,7 +66,7 @@ export function WorkspaceShell({ workspace }: WorkspaceShellProps) {
 
   return (
     <div
-      className="flex min-h-screen flex-col"
+      className="flex h-screen flex-col overflow-hidden"
       style={{
         backgroundImage:
           "radial-gradient(circle, var(--border) 1px, transparent 1px)",

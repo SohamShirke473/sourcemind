@@ -13,7 +13,10 @@ import { MindmapViewer } from "./mindmap-viewer";
 import { QuizViewer } from "./quiz-viewer";
 import { ReportViewer } from "./report-viewer";
 
+import { AudioViewer } from "./audio-viewer";
+
 interface ArtifactDetailModalProps {
+  id: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: string;
@@ -23,6 +26,7 @@ interface ArtifactDetailModalProps {
 }
 
 export function ArtifactDetailModal({
+  id,
   open,
   onOpenChange,
   type,
@@ -34,6 +38,7 @@ export function ArtifactDetailModal({
   const isFlashcard = type === "FLASHCARDS" || type === "flashcard";
   const isQuiz = type === "QUIZ" || type === "quiz";
   const isReport = type === "REPORT" || type === "report";
+  const isAudio = type === "AUDIO" || type === "audio";
 
   const renderContent = () => {
     if (status === "generating") {
@@ -46,10 +51,16 @@ export function ArtifactDetailModal({
 
     if (status === "failed") {
       return (
-        <p className="text-sm text-red-500">
-          Generation failed. Please try again.
-        </p>
+        <div className="flex h-full items-center justify-center">
+          <p className="text-sm font-medium text-destructive">
+            Generation failed. Please try again.
+          </p>
+        </div>
       );
+    }
+
+    if (isAudio) {
+      return <AudioViewer artifactId={id} />;
     }
 
     if (isMindMap && content?.nodes && content?.edges) {

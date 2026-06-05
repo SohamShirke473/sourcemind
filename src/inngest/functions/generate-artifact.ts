@@ -1,8 +1,11 @@
+import { GoogleGenAI } from "@google/genai";
 import { generateText } from "ai";
 import { eq, inArray } from "drizzle-orm";
+import { WaveFile } from "wavefile";
 import { z } from "zod";
 import db from "@/db";
 import { artifacts, sources } from "@/db/schema";
+import { uploadFile } from "@/lib/r2";
 import { inngest } from "../client";
 
 const mindMapSchema = z.object({
@@ -327,6 +330,105 @@ export const generateArtifact = inngest.createFunction(
         });
 
         return { generated: true };
+      }
+
+      if (artifact.type === "audio") {
+        const result = await step.run("generate-audio", async () => {
+          const transcriptResponse = await generateText({
+            model: "openai/gpt-oss-20b",
+            prompt: `You are a podcast generator. Given the following source content and user instructions, generate a short podcast transcript (around 200 words) summarizing the key concepts.
+The podcast is hosted by two hosts: "Host 1" and "Host 2". Make it conversational and engaging.
+
+Source content:
+${sourceContent || "(No source content provided)"}
+
+User instructions:
+${(prompt as string) || "(No specific instructions)"}
+
+Return the transcript in a plain text format, for example:
+Host 1: Hello!
+Host 2: Hi there!
+Do not use markdown formatting.`,
+          });
+
+          const titleResponse = await generateText({
+            model: "openai/gpt-oss-20b",
+            prompt: `Generate a short (max 6 words), catchy title for a podcast episode based on this transcript:\n\n${transcriptResponse.text}`,
+          });
+          const generatedTitle = titleResponse.text.replace(/["*]/g, "").trim();
+
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+          
+          const audioResponse = await ai.models.generateContent({
+             model: "gemini-3.1-flash-tts-preview",
+             contents: [{ parts: [{ text: `TTS the following conversation between Host 1 and Host 2:\n${transcriptResponse.text}` }] }],
+             config: {
+                   responseModalities: ['AUDIO'],
+                   speechConfig: {
+                      multiSpeakerVoiceConfig: {
+                         speakerVoiceConfigs: [
+                               {
+                                  speaker: 'Host 1',
+                                  voiceConfig: {
+                                     prebuiltVoiceConfig: { voiceName: 'Kore' }
+                                  }
+                               },
+                               {
+                                  speaker: 'Host 2',
+                                  voiceConfig: {
+                                     prebuiltVoiceConfig: { voiceName: 'Puck' }
+                                  }
+                               }
+                         ]
+                      }
+                   }
+             }
+          });
+
+          const base64Data = audioResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+          if (!base64Data) throw new Error("No audio data returned from Gemini TTS");
+
+          const pcmBuffer = Buffer.from(base64Data, 'base64');
+          
+          // Generate a standard 44-byte WAV header for 24kHz 16-bit mono PCM
+          const wavHeader = Buffer.alloc(44);
+          wavHeader.write("RIFF", 0);
+          wavHeader.writeUInt32LE(36 + pcmBuffer.length, 4);
+          wavHeader.write("WAVE", 8);
+          wavHeader.write("fmt ", 12);
+          wavHeader.writeUInt32LE(16, 16); // Subchunk1Size
+          wavHeader.writeUInt16LE(1, 20); // AudioFormat (PCM)
+          wavHeader.writeUInt16LE(1, 22); // NumChannels
+          wavHeader.writeUInt32LE(24000, 24); // SampleRate
+          wavHeader.writeUInt32LE(24000 * 2, 28); // ByteRate
+          wavHeader.writeUInt16LE(2, 32); // BlockAlign
+          wavHeader.writeUInt16LE(16, 34); // BitsPerSample
+          wavHeader.write("data", 36);
+          wavHeader.writeUInt32LE(pcmBuffer.length, 40);
+
+          const wavBuffer = Buffer.concat([wavHeader, pcmBuffer]);
+          
+          const fileKey = `artifacts/audio/${artifactId}.wav`;
+          await uploadFile({
+            buffer: Buffer.from(wavBuffer),
+            key: fileKey,
+            contentType: "audio/wav",
+          });
+
+          await db
+            .update(artifacts)
+            .set({
+              fileUrl: fileKey,
+              title: generatedTitle,
+              status: "ready",
+              updatedAt: new Date(),
+            })
+            .where(eq(artifacts.id, artifactId as string));
+            
+          return { generated: true, title: generatedTitle };
+        });
+
+        return result;
       }
 
       await step.run("mark-ready", async () => {

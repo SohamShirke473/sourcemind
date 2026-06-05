@@ -181,6 +181,14 @@ export function ChatPanel({
     void prependVersion;
   }, [prependVersion]);
 
+  // Scroll to bottom on initial load
+  useEffect(() => {
+    if (loaded && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [loaded]);
+
+  // Scroll to bottom when streaming new messages
   useEffect(() => {
     if (!scrollRef.current || status === "ready") return;
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -202,8 +210,8 @@ export function ChatPanel({
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         {loadingOlder && (
           <div className="flex justify-center py-2 text-xs text-muted-foreground">
             Loading older messages...

@@ -36,7 +36,7 @@ export function ChatMessages({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-5 px-6 py-6">
+    <div className="flex flex-col gap-5 px-6 py-6">
       {messages.map((message, idx) => (
         <ChatBubble
           key={message.id}

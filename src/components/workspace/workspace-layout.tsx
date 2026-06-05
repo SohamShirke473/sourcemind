@@ -31,7 +31,7 @@ export function WorkspaceLayout({
         </Panel>
         <Separator className="w-px bg-border transition-colors hover:bg-primary data-dragging:bg-primary" />
         <Panel id="chat" defaultSize="45%" minSize="30%">
-          <div className="flex h-full flex-col bg-background">{chat}</div>
+          <div className="flex h-full flex-col overflow-hidden bg-background">{chat}</div>
         </Panel>
         <Separator className="w-px bg-border transition-colors hover:bg-primary data-dragging:bg-primary" />
         <Panel id="artifacts" defaultSize="30%" minSize="20%" maxSize="45%">

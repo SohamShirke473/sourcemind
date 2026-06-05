@@ -214,6 +214,7 @@ export function ArtifactsPanel({ workspaceId }: ArtifactsPanelProps) {
 
       {selectedArtifact && (
         <ArtifactDetailModal
+          id={selectedArtifact.id}
           open={detailOpen}
           onOpenChange={setDetailOpen}
           type={selectedArtifact.type}
