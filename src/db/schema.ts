@@ -142,6 +142,7 @@ export const artifacts = pgTable("artifacts", {
   title: varchar("title", { length: 255 }).notNull(),
   content: jsonb("content"), // structured data — flashcard array, mindmap nodes, etc.
   fileUrl: text("file_url"), // for audio / ppt — R2 URL
+  metadata: jsonb("metadata"), // added back to avoid data loss
   status: artifactStatusEnum("status").notNull().default("generating"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

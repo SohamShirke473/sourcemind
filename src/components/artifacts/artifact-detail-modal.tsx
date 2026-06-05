@@ -11,6 +11,7 @@ import {
 import { FlashcardViewer } from "./flashcard-viewer";
 import { MindmapViewer } from "./mindmap-viewer";
 import { QuizViewer } from "./quiz-viewer";
+import { ReportViewer } from "./report-viewer";
 
 interface ArtifactDetailModalProps {
   open: boolean;
@@ -32,6 +33,7 @@ export function ArtifactDetailModal({
   const isMindMap = type === "MIND MAP" || type === "mindmap";
   const isFlashcard = type === "FLASHCARDS" || type === "flashcard";
   const isQuiz = type === "QUIZ" || type === "quiz";
+  const isReport = type === "REPORT" || type === "report";
 
   const renderContent = () => {
     if (status === "generating") {
@@ -73,6 +75,10 @@ export function ArtifactDetailModal({
           questions={content.questions as { question: string; options: string[]; correctIndex: number; explanation?: string }[]}
         />
       );
+    }
+
+    if (isReport && content?.report) {
+      return <ReportViewer report={content.report as string} />;
     }
 
     return (

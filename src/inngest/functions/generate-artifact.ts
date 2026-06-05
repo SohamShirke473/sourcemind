@@ -48,6 +48,10 @@ const quizSchema = z.object({
     .max(15),
 });
 
+const reportSchema = z.object({
+  report: z.string(),
+});
+
 function buildMindMapPrompt(sourceContent: string, userPrompt: string): string {
   return `You are a mind map generator. Given the following source content and user instructions, generate a mind map as a JSON object.
 
@@ -138,6 +142,30 @@ User instructions:
 ${userPrompt || "(No specific instructions)"}
 
 Return ONLY valid JSON, no markdown formatting or code fences.`;
+}
+
+function buildReportPrompt(sourceContent: string, userPrompt: string): string {
+  return `You are a professional report writer. Given the following source content and user instructions, generate a comprehensive report as a JSON object.
+
+The JSON must have this exact structure:
+{
+  "report": "Your detailed report content formatted in Markdown"
+}
+
+Requirements:
+- Generate a well-structured report covering the key concepts from the source
+- Use Markdown formatting (headings, bullet points, bold text)
+- Include an introduction, body paragraphs with subheadings, and a conclusion
+- The report should be informative and synthesize the source material
+- Use plain text for the JSON values (escape necessary characters, but no code fences inside the string)
+
+Source content:
+${sourceContent || "(No source content provided)"}
+
+User instructions:
+${userPrompt || "(No specific instructions)"}
+
+Return ONLY valid JSON, no markdown formatting or code fences outside the JSON string.`;
 }
 
 function extractJSON(text: string): string {
@@ -257,6 +285,32 @@ export const generateArtifact = inngest.createFunction(
         });
 
         return { generated: true, questionCount: parsed.questions.length };
+      }
+
+      if (artifact.type === "report") {
+        const result = await step.run("generate-report", async () => {
+          const response = await generateText({
+            model: "openai/gpt-oss-20b",
+            prompt: buildReportPrompt(sourceContent, (prompt as string) || ""),
+          });
+          return response.text;
+        });
+
+        const jsonStr = extractJSON(result);
+        const parsed = reportSchema.parse(JSON.parse(jsonStr));
+
+        await step.run("save-report", async () => {
+          await db
+            .update(artifacts)
+            .set({
+              content: parsed,
+              status: "ready",
+              updatedAt: new Date(),
+            })
+            .where(eq(artifacts.id, artifactId as string));
+        });
+
+        return { generated: true };
       }
 
       await step.run("mark-ready", async () => {
