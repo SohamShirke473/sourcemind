@@ -34,6 +34,20 @@ const flashcardSchema = z.object({
     .max(20),
 });
 
+const quizSchema = z.object({
+  questions: z
+    .array(
+      z.object({
+        question: z.string(),
+        options: z.array(z.string()).length(4),
+        correctIndex: z.number().int().min(0).max(3),
+        explanation: z.string().optional(),
+      }),
+    )
+    .min(1)
+    .max(15),
+});
+
 function buildMindMapPrompt(sourceContent: string, userPrompt: string): string {
   return `You are a mind map generator. Given the following source content and user instructions, generate a mind map as a JSON object.
 
@@ -84,6 +98,38 @@ Requirements:
 - Back should be a clear, complete answer or definition
 - Use plain text only (no markdown, no formatting)
 - Each card should test a single concept
+
+Source content:
+${sourceContent || "(No source content provided)"}
+
+User instructions:
+${userPrompt || "(No specific instructions)"}
+
+Return ONLY valid JSON, no markdown formatting or code fences.`;
+}
+
+function buildQuizPrompt(sourceContent: string, userPrompt: string): string {
+  return `You are a quiz generator. Given the following source content and user instructions, generate a multiple-choice quiz as a JSON object.
+
+The JSON must have this exact structure:
+{
+  "questions": [
+    {
+      "question": "What is the capital of France?",
+      "options": ["London", "Paris", "Berlin", "Madrid"],
+      "correctIndex": 1,
+      "explanation": "Paris has been the capital of France since..."
+    }
+  ]
+}
+
+Requirements:
+- Generate 5-15 multiple-choice questions covering key concepts from the source
+- Each question must have exactly 4 options
+- correctIndex must be 0, 1, 2, or 3 (the index of the correct option)
+- Questions can include markdown formatting (bold, lists, etc.)
+- Include a brief explanation for the correct answer where helpful
+- Questions should test understanding, not just recall
 
 Source content:
 ${sourceContent || "(No source content provided)"}
@@ -185,6 +231,32 @@ export const generateArtifact = inngest.createFunction(
         });
 
         return { generated: true, cardCount: parsed.cards.length };
+      }
+
+      if (artifact.type === "quiz") {
+        const result = await step.run("generate-quiz", async () => {
+          const response = await generateText({
+            model: "openai/gpt-oss-20b",
+            prompt: buildQuizPrompt(sourceContent, (prompt as string) || ""),
+          });
+          return response.text;
+        });
+
+        const jsonStr = extractJSON(result);
+        const parsed = quizSchema.parse(JSON.parse(jsonStr));
+
+        await step.run("save-quiz", async () => {
+          await db
+            .update(artifacts)
+            .set({
+              content: parsed,
+              status: "ready",
+              updatedAt: new Date(),
+            })
+            .where(eq(artifacts.id, artifactId as string));
+        });
+
+        return { generated: true, questionCount: parsed.questions.length };
       }
 
       await step.run("mark-ready", async () => {

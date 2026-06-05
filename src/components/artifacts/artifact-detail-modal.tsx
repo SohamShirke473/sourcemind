@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { FlashcardViewer } from "./flashcard-viewer";
 import { MindmapViewer } from "./mindmap-viewer";
+import { QuizViewer } from "./quiz-viewer";
 
 interface ArtifactDetailModalProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function ArtifactDetailModal({
 }: ArtifactDetailModalProps) {
   const isMindMap = type === "MIND MAP" || type === "mindmap";
   const isFlashcard = type === "FLASHCARDS" || type === "flashcard";
+  const isQuiz = type === "QUIZ" || type === "quiz";
 
   const renderContent = () => {
     if (status === "generating") {
@@ -61,6 +63,14 @@ export function ArtifactDetailModal({
       return (
         <FlashcardViewer
           cards={content.cards as { front: string; back: string }[]}
+        />
+      );
+    }
+
+    if (isQuiz && content?.questions) {
+      return (
+        <QuizViewer
+          questions={content.questions as { question: string; options: string[]; correctIndex: number; explanation?: string }[]}
         />
       );
     }
