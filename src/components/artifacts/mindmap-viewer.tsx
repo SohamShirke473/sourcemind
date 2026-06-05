@@ -30,11 +30,19 @@ interface MindmapViewerProps {
   edges: MindMapEdge[];
 }
 
-function MindMapNodeComponent({ data }: { data: { label: string; isRoot?: boolean } }) {
+function MindMapNodeComponent({
+  data,
+}: {
+  data: { label: string; isRoot?: boolean };
+}) {
   if (data.isRoot) {
     return (
       <div className="flex flex-col items-center gap-1.5 rounded-xl border-2 border-primary bg-primary/10 px-5 py-3 shadow-md">
-        <Handle type="source" position={Position.Right} className="!bg-primary" />
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="!bg-primary"
+        />
         <span className="text-sm font-bold text-primary">{data.label}</span>
       </div>
     );

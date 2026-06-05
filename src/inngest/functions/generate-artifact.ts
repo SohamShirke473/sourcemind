@@ -22,6 +22,18 @@ const mindMapSchema = z.object({
   ),
 });
 
+const flashcardSchema = z.object({
+  cards: z
+    .array(
+      z.object({
+        front: z.string(),
+        back: z.string(),
+      }),
+    )
+    .min(1)
+    .max(20),
+});
+
 function buildMindMapPrompt(sourceContent: string, userPrompt: string): string {
   return `You are a mind map generator. Given the following source content and user instructions, generate a mind map as a JSON object.
 
@@ -42,6 +54,36 @@ Requirements:
 - Each edge connects from one node to another with an optional label
 - Generate 8-15 nodes covering the key concepts
 - Labels should be concise (2-5 words)
+
+Source content:
+${sourceContent || "(No source content provided)"}
+
+User instructions:
+${userPrompt || "(No specific instructions)"}
+
+Return ONLY valid JSON, no markdown formatting or code fences.`;
+}
+
+function buildFlashcardPrompt(
+  sourceContent: string,
+  userPrompt: string,
+): string {
+  return `You are a flashcard generator. Given the following source content and user instructions, generate flashcards as a JSON object.
+
+The JSON must have this exact structure:
+{
+  "cards": [
+    { "front": "Question or term", "back": "Answer or definition" },
+    { "front": "Question or term", "back": "Answer or definition" }
+  ]
+}
+
+Requirements:
+- Generate 5-20 flashcards covering the key concepts from the source
+- Front should be a concise question, term, or prompt
+- Back should be a clear, complete answer or definition
+- Use plain text only (no markdown, no formatting)
+- Each card should test a single concept
 
 Source content:
 ${sourceContent || "(No source content provided)"}
@@ -76,16 +118,6 @@ export const generateArtifact = inngest.createFunction(
     }
 
     try {
-      if (artifact.type !== "mindmap") {
-        await step.run("mark-ready", async () => {
-          await db
-            .update(artifacts)
-            .set({ status: "ready", updatedAt: new Date() })
-            .where(eq(artifacts.id, artifactId as string));
-        });
-        return { unsupportedType: artifact.type };
-      }
-
       const contentSources = await step.run("get-sources", async () => {
         const ids = sourceIds as string[];
         if (!ids || ids.length === 0) return [];
@@ -100,29 +132,68 @@ export const generateArtifact = inngest.createFunction(
         .filter(Boolean)
         .join("\n\n---\n\n");
 
-      const result = await step.run("generate-mindmap", async () => {
-        const response = await generateText({
-          model: "openai/gpt-oss-20b",
-          prompt: buildMindMapPrompt(sourceContent, (prompt as string) || ""),
+      if (artifact.type === "mindmap") {
+        const result = await step.run("generate-mindmap", async () => {
+          const response = await generateText({
+            model: "openai/gpt-oss-20b",
+            prompt: buildMindMapPrompt(sourceContent, (prompt as string) || ""),
+          });
+          return response.text;
         });
-        return response.text;
-      });
 
-      const jsonStr = extractJSON(result);
-      const parsed = mindMapSchema.parse(JSON.parse(jsonStr));
+        const jsonStr = extractJSON(result);
+        const parsed = mindMapSchema.parse(JSON.parse(jsonStr));
 
-      await step.run("save-artifact", async () => {
+        await step.run("save-artifact", async () => {
+          await db
+            .update(artifacts)
+            .set({
+              content: parsed,
+              status: "ready",
+              updatedAt: new Date(),
+            })
+            .where(eq(artifacts.id, artifactId as string));
+        });
+
+        return { generated: true, nodeCount: parsed.nodes.length };
+      }
+
+      if (artifact.type === "flashcard") {
+        const result = await step.run("generate-flashcards", async () => {
+          const response = await generateText({
+            model: "openai/gpt-oss-20b",
+            prompt: buildFlashcardPrompt(
+              sourceContent,
+              (prompt as string) || "",
+            ),
+          });
+          return response.text;
+        });
+
+        const jsonStr = extractJSON(result);
+        const parsed = flashcardSchema.parse(JSON.parse(jsonStr));
+
+        await step.run("save-flashcards", async () => {
+          await db
+            .update(artifacts)
+            .set({
+              content: parsed,
+              status: "ready",
+              updatedAt: new Date(),
+            })
+            .where(eq(artifacts.id, artifactId as string));
+        });
+
+        return { generated: true, cardCount: parsed.cards.length };
+      }
+
+      await step.run("mark-ready", async () => {
         await db
           .update(artifacts)
-          .set({
-            content: parsed,
-            status: "ready",
-            updatedAt: new Date(),
-          })
+          .set({ status: "ready", updatedAt: new Date() })
           .where(eq(artifacts.id, artifactId as string));
       });
-
-      return { generated: true, nodeCount: parsed.nodes.length };
+      return { unsupportedType: artifact.type };
     } catch (error) {
       await step.run("mark-failed", async () => {
         await db

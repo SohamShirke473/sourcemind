@@ -71,9 +71,7 @@ export function GenerateArtifactDialog({
   const meta = TYPE_META[artifactType] ?? TYPE_META.mindmap;
   const Icon = meta.icon;
 
-  const sourcesQuery = useQuery(
-    trpc.source.list.queryOptions({ workspaceId }),
-  );
+  const sourcesQuery = useQuery(trpc.source.list.queryOptions({ workspaceId }));
   const readySources = (sourcesQuery.data ?? []).filter(
     (s) => s.status === "ready",
   );
@@ -122,8 +120,7 @@ export function GenerateArtifactDialog({
     });
   };
 
-  const isGenerating =
-    createArtifact.status === "pending";
+  const isGenerating = createArtifact.status === "pending";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

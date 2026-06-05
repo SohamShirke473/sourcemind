@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FlashcardViewer } from "./flashcard-viewer";
 import { MindmapViewer } from "./mindmap-viewer";
 
 interface ArtifactDetailModalProps {
@@ -15,7 +16,7 @@ interface ArtifactDetailModalProps {
   onOpenChange: (open: boolean) => void;
   type: string;
   title: string;
-  content?: { nodes?: unknown[]; edges?: unknown[] } | null;
+  content?: Record<string, unknown> | null;
   status: string;
 }
 
@@ -28,6 +29,7 @@ export function ArtifactDetailModal({
   status,
 }: ArtifactDetailModalProps) {
   const isMindMap = type === "MIND MAP" || type === "mindmap";
+  const isFlashcard = type === "FLASHCARDS" || type === "flashcard";
 
   const renderContent = () => {
     if (status === "generating") {
@@ -51,6 +53,14 @@ export function ArtifactDetailModal({
         <MindmapViewer
           nodes={content.nodes as { id: string; label: string; parentId: string | null }[]}
           edges={content.edges as { from: string; to: string; label?: string }[]}
+        />
+      );
+    }
+
+    if (isFlashcard && content?.cards) {
+      return (
+        <FlashcardViewer
+          cards={content.cards as { front: string; back: string }[]}
         />
       );
     }

@@ -67,7 +67,7 @@ export function ArtifactsPanel({ workspaceId }: ArtifactsPanelProps) {
     id: string;
     type: string;
     title: string;
-    content?: { nodes?: unknown[]; edges?: unknown[] } | null;
+    content?: Record<string, unknown> | null;
     status: string;
     createdAt: Date;
   } | null>(null);
@@ -80,9 +80,7 @@ export function ArtifactsPanel({ workspaceId }: ArtifactsPanelProps) {
   );
   const artifacts = artifactsQuery.data ?? [];
 
-  const isProcessing = artifacts.some(
-    (a) => a.status === "generating",
-  );
+  const isProcessing = artifacts.some((a) => a.status === "generating");
 
   useEffect(() => {
     if (isProcessing) {
@@ -115,10 +113,7 @@ export function ArtifactsPanel({ workspaceId }: ArtifactsPanelProps) {
   };
 
   const handleCardClick = (artifact: (typeof artifacts)[number]) => {
-    const content = artifact.content as
-      | { nodes?: unknown[]; edges?: unknown[] }
-      | null
-      | undefined;
+    const content = artifact.content as Record<string, unknown> | null | undefined;
     setSelectedArtifact({
       id: artifact.id,
       type: TYPE_LABEL_MAP[artifact.type] ?? artifact.type,
@@ -157,10 +152,7 @@ export function ArtifactsPanel({ workspaceId }: ArtifactsPanelProps) {
       {artifacts.length > 0 ? (
         <div className="flex flex-col gap-2 px-4 py-4">
           {artifacts.map((artifact) => (
-            <div
-              key={artifact.id}
-              className="group relative"
-            >
+            <div key={artifact.id} className="group relative">
               <button
                 type="button"
                 onClick={() => handleCardClick(artifact)}
