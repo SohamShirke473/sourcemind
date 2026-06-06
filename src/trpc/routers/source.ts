@@ -24,7 +24,17 @@ export const sourceRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       await assertWorkspaceOwnership(input.workspaceId, ctx.userId);
       return db
-        .select()
+        .select({
+          id: sources.id,
+          type: sources.type,
+          title: sources.title,
+          fileUrl: sources.fileUrl,
+          sourceUrl: sources.sourceUrl,
+          status: sources.status,
+          metadata: sources.metadata,
+          createdAt: sources.createdAt,
+          updatedAt: sources.updatedAt,
+        })
         .from(sources)
         .where(eq(sources.workspaceId, input.workspaceId))
         .orderBy(desc(sources.createdAt));
@@ -136,27 +146,18 @@ export const sourceRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const [source] = await db
-        .select()
+        .select({
+          id: sources.id,
+          fileUrl: sources.fileUrl,
+          workspaceId: sources.workspaceId,
+          userId: workspaces.userId,
+        })
         .from(sources)
+        .innerJoin(workspaces, eq(workspaces.id, sources.workspaceId))
         .where(eq(sources.id, input.id))
         .limit(1);
 
-      if (!source) {
-        throw new TRPCError({ code: "NOT_FOUND" });
-      }
-
-      const [workspace] = await db
-        .select({ id: workspaces.id })
-        .from(workspaces)
-        .where(
-          and(
-            eq(workspaces.id, source.workspaceId),
-            eq(workspaces.userId, ctx.userId),
-          ),
-        )
-        .limit(1);
-
-      if (!workspace) {
+      if (!source || source.userId !== ctx.userId) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 

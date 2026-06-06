@@ -50,33 +50,47 @@ export const messageRoleEnum = pgEnum("message_role", ["user", "assistant"]);
 
 // ─── Workspaces ───────────────────────────────────────────────────────────────
 
-export const workspaces = pgTable("workspaces", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  description: text("description"),
-  emoji: varchar("emoji", { length: 10 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const workspaces = pgTable(
+  "workspaces",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    emoji: varchar("emoji", { length: 10 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("workspaces_user_id_idx").on(table.userId),
+    index("workspaces_user_id_updated_at_idx").on(
+      table.userId,
+      table.updatedAt,
+    ),
+  ],
+);
 
 // ─── Sources ──────────────────────────────────────────────────────────────────
 
-export const sources = pgTable("sources", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  workspaceId: uuid("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  type: sourceTypeEnum("type").notNull(),
-  title: varchar("title", { length: 500 }).notNull(),
-  rawContent: text("raw_content"), // extracted plain text
-  fileUrl: text("file_url"), // R2/S3 URL for file sources
-  sourceUrl: text("source_url"), // original URL / YouTube link
-  status: sourceStatusEnum("status").notNull().default("processing"),
-  metadata: jsonb("metadata"), // page count, duration, etc.
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const sources = pgTable(
+  "sources",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    type: sourceTypeEnum("type").notNull(),
+    title: varchar("title", { length: 500 }).notNull(),
+    rawContent: text("raw_content"),
+    fileUrl: text("file_url"),
+    sourceUrl: text("source_url"),
+    status: sourceStatusEnum("status").notNull().default("processing"),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("sources_workspace_id_idx").on(table.workspaceId)],
+);
 
 // ─── Source Chunks (RAG) ──────────────────────────────────────────────────────
 
@@ -108,45 +122,63 @@ export const sourceChunks = pgTable(
 
 // ─── Chats ────────────────────────────────────────────────────────────────────
 
-export const chats = pgTable("chats", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  workspaceId: uuid("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  title: varchar("title", { length: 255 }).notNull().default("New Chat"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const chats = pgTable(
+  "chats",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 255 }).notNull().default("New Chat"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("chats_workspace_id_idx").on(table.workspaceId)],
+);
 
 // ─── Messages ─────────────────────────────────────────────────────────────────
 
-export const messages = pgTable("messages", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  chatId: uuid("chat_id")
-    .notNull()
-    .references(() => chats.id, { onDelete: "cascade" }),
-  role: messageRoleEnum("role").notNull(),
-  content: text("content").notNull(),
-  sourceCitations: jsonb("source_citations"), // [{ chunkId, sourceId, snippet }]
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    chatId: uuid("chat_id")
+      .notNull()
+      .references(() => chats.id, { onDelete: "cascade" }),
+    role: messageRoleEnum("role").notNull(),
+    content: text("content").notNull(),
+    sourceCitations: jsonb("source_citations"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("messages_chat_id_idx").on(table.chatId),
+    index("messages_chat_id_created_at_idx").on(
+      table.chatId,
+      table.createdAt,
+    ),
+  ],
+);
 
 // ─── Artifacts ────────────────────────────────────────────────────────────────
 
-export const artifacts = pgTable("artifacts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  workspaceId: uuid("workspace_id")
-    .notNull()
-    .references(() => workspaces.id, { onDelete: "cascade" }),
-  type: artifactTypeEnum("type").notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  content: jsonb("content"), // structured data — flashcard array, mindmap nodes, etc.
-  fileUrl: text("file_url"), // for audio / ppt — R2 URL
-  metadata: jsonb("metadata"), // added back to avoid data loss
-  status: artifactStatusEnum("status").notNull().default("generating"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const artifacts = pgTable(
+  "artifacts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    type: artifactTypeEnum("type").notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    content: jsonb("content"),
+    fileUrl: text("file_url"),
+    metadata: jsonb("metadata"),
+    status: artifactStatusEnum("status").notNull().default("generating"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("artifacts_workspace_id_idx").on(table.workspaceId)],
+);
 
 // ─── Relations ────────────────────────────────────────────────────────────────
 

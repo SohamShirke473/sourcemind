@@ -12,7 +12,12 @@ export const chatRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       await assertWorkspaceOwnership(input.workspaceId, ctx.userId);
       return db
-        .select()
+        .select({
+          id: chats.id,
+          title: chats.title,
+          createdAt: chats.createdAt,
+          updatedAt: chats.updatedAt,
+        })
         .from(chats)
         .where(eq(chats.workspaceId, input.workspaceId))
         .orderBy(desc(chats.updatedAt));

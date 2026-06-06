@@ -17,18 +17,18 @@ export const workspaceRouter = createTRPCRouter({
       return db
         .select({
           id: workspaces.id,
-          userId: workspaces.userId,
           title: workspaces.title,
           description: workspaces.description,
           emoji: workspaces.emoji,
           createdAt: workspaces.createdAt,
           updatedAt: workspaces.updatedAt,
-          sourceCount: sql<number>`count(${sources.id})::int`,
+          sourceCount: sql<number>`(
+            SELECT count(*)::int FROM ${sources}
+            WHERE ${sources.workspaceId} = ${workspaces.id}
+          )`,
         })
         .from(workspaces)
-        .leftJoin(sources, eq(workspaces.id, sources.workspaceId))
         .where(and(...conditions))
-        .groupBy(workspaces.id)
         .orderBy(desc(workspaces.updatedAt));
     }),
 

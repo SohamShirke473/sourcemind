@@ -22,7 +22,15 @@ export const artifactRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       await assertWorkspaceOwnership(input.workspaceId, ctx.userId);
       return db
-        .select()
+        .select({
+          id: artifacts.id,
+          type: artifacts.type,
+          title: artifacts.title,
+          content: artifacts.content,
+          status: artifacts.status,
+          createdAt: artifacts.createdAt,
+          updatedAt: artifacts.updatedAt,
+        })
         .from(artifacts)
         .where(eq(artifacts.workspaceId, input.workspaceId))
         .orderBy(desc(artifacts.createdAt));

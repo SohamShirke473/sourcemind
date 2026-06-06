@@ -40,11 +40,12 @@ export async function searchRelevantChunks(
     .innerJoin(sources, eq(sources.id, sourceChunks.sourceId))
     .where(eq(sourceChunks.workspaceId, workspaceId))
     .orderBy(desc(similarity))
-    .limit(limit);
+    .limit(limit + 12);
 
   const seen = new Set<string>();
   const deduped: ChunkResult[] = [];
   for (const r of results) {
+    if (deduped.length >= limit) break;
     if (!seen.has(r.sourceId)) {
       seen.add(r.sourceId);
       deduped.push(r);

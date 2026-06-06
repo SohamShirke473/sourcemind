@@ -27,19 +27,11 @@ export async function POST(req: Request) {
 
   const { messages: uiMessages, workspaceId, chatId } = body;
 
-  const [workspace] = await db
-    .select({ id: workspaces.id })
-    .from(workspaces)
-    .where(and(eq(workspaces.id, workspaceId), eq(workspaces.userId, userId)))
-    .limit(1);
-  if (!workspace) {
-    return new Response("Not found", { status: 403 });
-  }
-
   const [chat] = await db
     .select({ id: chats.id })
     .from(chats)
-    .where(and(eq(chats.id, chatId), eq(chats.workspaceId, workspaceId)))
+    .innerJoin(workspaces, eq(workspaces.id, chats.workspaceId))
+    .where(and(eq(chats.id, chatId), eq(workspaces.userId, userId)))
     .limit(1);
   if (!chat) {
     return new Response("Not found", { status: 403 });
@@ -64,7 +56,7 @@ export async function POST(req: Request) {
   const relevantChunks = await searchRelevantChunks(workspaceId, userQuery);
   const systemPrompt = buildSystemPrompt(relevantChunks);
 
-  const result = streamText({
+  const stream = streamText({
     model: "minimax/minimax-m2.5",
     messages: modelMessages,
     system: systemPrompt,
@@ -98,5 +90,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return stream.toUIMessageStreamResponse();
 }
