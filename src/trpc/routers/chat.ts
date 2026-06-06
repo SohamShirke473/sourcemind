@@ -74,7 +74,14 @@ export const chatRouter = createTRPCRouter({
       await assertWorkspaceOwnership(chat.workspaceId, ctx.userId);
 
       const rows = await db
-        .select()
+        .select({
+          id: messages.id,
+          chatId: messages.chatId,
+          role: messages.role,
+          content: messages.content,
+          sourceCitations: messages.sourceCitations,
+          createdAt: messages.createdAt,
+        })
         .from(messages)
         .where(eq(messages.chatId, input.chatId))
         .orderBy(desc(messages.createdAt))

@@ -2,10 +2,11 @@ import { TRPCError } from "@trpc/server";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import db from "@/db";
-import { artifacts } from "@/db/schema";
+import { artifacts, workspaces } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { authProcedure, createTRPCRouter } from "../init";
 import { assertWorkspaceOwnership } from "../utils";
+import { deleteFile } from "@/lib/r2";
 
 const artifactTypeEnum = z.enum([
   "ppt",
@@ -76,16 +77,24 @@ export const artifactRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const [artifact] = await db
-        .select()
+        .select({
+          id: artifacts.id,
+          workspaceId: artifacts.workspaceId,
+          fileUrl: artifacts.fileUrl,
+          userId: workspaces.userId,
+        })
         .from(artifacts)
+        .innerJoin(workspaces, eq(workspaces.id, artifacts.workspaceId))
         .where(eq(artifacts.id, input.id))
         .limit(1);
 
-      if (!artifact) {
+      if (!artifact || artifact.userId !== ctx.userId) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      await assertWorkspaceOwnership(artifact.workspaceId, ctx.userId);
+      if (artifact.fileUrl) {
+        await deleteFile(artifact.fileUrl).catch(() => {});
+      }
 
       await db.delete(artifacts).where(eq(artifacts.id, input.id));
       return { success: true };

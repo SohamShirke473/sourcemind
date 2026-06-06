@@ -22,13 +22,12 @@ export const workspaceRouter = createTRPCRouter({
           emoji: workspaces.emoji,
           createdAt: workspaces.createdAt,
           updatedAt: workspaces.updatedAt,
-          sourceCount: sql<number>`(
-            SELECT count(*)::int FROM ${sources}
-            WHERE ${sources.workspaceId} = ${workspaces.id}
-          )`,
+          sourceCount: sql<number>`count(${sources.id})::int`,
         })
         .from(workspaces)
+        .leftJoin(sources, eq(workspaces.id, sources.workspaceId))
         .where(and(...conditions))
+        .groupBy(workspaces.id)
         .orderBy(desc(workspaces.updatedAt));
     }),
 

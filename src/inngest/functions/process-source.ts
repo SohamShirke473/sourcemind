@@ -17,7 +17,17 @@ export const processSource = inngest.createFunction(
 
     const source = await step.run("get-source", async () => {
       const [result] = await db
-        .select()
+        .select({
+          id: sources.id,
+          workspaceId: sources.workspaceId,
+          type: sources.type,
+          title: sources.title,
+          rawContent: sources.rawContent,
+          fileUrl: sources.fileUrl,
+          sourceUrl: sources.sourceUrl,
+          status: sources.status,
+          metadata: sources.metadata,
+        })
         .from(sources)
         .where(eq(sources.id, sourceId as string))
         .limit(1);
