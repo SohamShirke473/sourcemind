@@ -347,7 +347,7 @@ ${prompt || "(No specific instructions)"}`
 
           const base64Data = image.base64;
           if (!base64Data) {
-            throw new Error("No image data returned from OpenAI Image model");
+            throw new Error("No image data returned from Google Imagen model");
           }
 
           const fileKey = `artifacts/infographic/${artifactId}.png`;
@@ -410,7 +410,9 @@ Do not use markdown formatting.`,
           });
           const generatedTitle = titleResponse.text.replace(/["*]/g, "").trim();
 
-          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+          const ai = new GoogleGenAI({
+            apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY
+          });
           
           const audioResponse = await ai.models.generateContent({
              model: "gemini-3.1-flash-tts-preview",
