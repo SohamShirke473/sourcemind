@@ -27,7 +27,7 @@ interface ArtifactTypeConfig {
 }
 
 const ARTIFACT_TYPES: ArtifactTypeConfig[] = [
-  { id: "ppt", label: "PPT", icon: PresentationIcon },
+  { id: "infographic", label: "INFOGRAPHIC", icon: PresentationIcon },
   { id: "audio", label: "AUDIO", icon: HeadphonesIcon },
   { id: "mindmap", label: "MIND MAP", icon: BrainCircuitIcon },
   { id: "flashcard", label: "FLASHCARDS", icon: LayersIcon },
@@ -36,7 +36,7 @@ const ARTIFACT_TYPES: ArtifactTypeConfig[] = [
 ];
 
 const TYPE_LABEL_MAP: Record<string, string> = {
-  ppt: "PPT",
+  infographic: "INFOGRAPHIC",
   audio: "AUDIO",
   mindmap: "MIND MAP",
   flashcard: "FLASHCARDS",

@@ -1,6 +1,7 @@
 "use client";
 
 import { XIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,6 +40,7 @@ export function ArtifactDetailModal({
   const isQuiz = type === "QUIZ" || type === "quiz";
   const isReport = type === "REPORT" || type === "report";
   const isAudio = type === "AUDIO" || type === "audio";
+  const isInfographic = type === "INFOGRAPHIC" || type === "infographic";
 
   const renderContent = () => {
     if (status === "generating") {
@@ -55,6 +57,46 @@ export function ArtifactDetailModal({
           <p className="text-sm font-medium text-destructive">
             Generation failed. Please try again.
           </p>
+        </div>
+      );
+    }
+
+    if (isInfographic) {
+      return (
+        <div className="flex h-full flex-col items-center justify-between p-6 gap-6 bg-card">
+          <div className="flex-1 flex items-center justify-center overflow-auto w-full max-h-[50vh] min-h-[300px] border border-border rounded-ui bg-muted/20 relative group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/api/artifacts/${id}/image`}
+              alt={title}
+              className="max-h-[48vh] max-w-full object-contain rounded-ui shadow-sm transition-transform duration-300 hover:scale-105"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/artifacts/${id}/image`);
+                  if (!res.ok) throw new Error("Failed to fetch image");
+                  const blob = await res.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${title.toLowerCase().replace(/\s+/g, "-")}.png`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  window.URL.revokeObjectURL(url);
+                } catch {
+                  toast.error("Failed to download image");
+                }
+              }}
+            >
+              Download Infographic
+            </Button>
+          </div>
         </div>
       );
     }

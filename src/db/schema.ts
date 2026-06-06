@@ -32,7 +32,7 @@ export const sourceStatusEnum = pgEnum("source_status", [
 ]);
 
 export const artifactTypeEnum = pgEnum("artifact_type", [
-  "ppt",
+  "infographic",
   "audio",
   "mindmap",
   "flashcard",

@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { generateText } from "ai";
+import { generateText, generateImage } from "ai";
 import { eq, inArray } from "drizzle-orm";
 import { WaveFile } from "wavefile";
 import { z } from "zod";
@@ -330,6 +330,59 @@ export const generateArtifact = inngest.createFunction(
         });
 
         return { generated: true };
+      }
+
+      if (artifact.type === "infographic") {
+        const result = await step.run("generate-infographic", async () => {
+          const { image } = await generateImage({
+            model: "google/imagen-4.0-ultra-generate-001",
+            prompt: `Create a clean, professional, and modern infographic visually summarizing the key concepts of the following content. Use a cohesive color palette, clear sections, readable layouts, and appropriate icons or visual structures. Make sure it looks polished and presentation-ready.
+
+Source content:
+${sourceContent || "(No source content provided)"}
+
+User instructions:
+${prompt || "(No specific instructions)"}`
+          });
+
+          const base64Data = image.base64;
+          if (!base64Data) {
+            throw new Error("No image data returned from OpenAI Image model");
+          }
+
+          const fileKey = `artifacts/infographic/${artifactId}.png`;
+          const buffer = Buffer.from(base64Data, "base64");
+
+          await uploadFile({
+            buffer,
+            key: fileKey,
+            contentType: "image/png",
+          });
+
+          return { fileKey };
+        });
+
+        const titleResult = await step.run("generate-infographic-title", async () => {
+          const response = await generateText({
+            model: "minimax/minimax-m2.5",
+            prompt: `Generate a short (max 6 words), descriptive title for an infographic based on this source content summary:\n\n${sourceContent.slice(0, 1000)}`,
+          });
+          return response.text.replace(/["*]/g, "").trim();
+        });
+
+        await step.run("save-infographic", async () => {
+          await db
+            .update(artifacts)
+            .set({
+              fileUrl: result.fileKey,
+              title: titleResult || "Infographic",
+              status: "ready",
+              updatedAt: new Date(),
+            })
+            .where(eq(artifacts.id, artifactId as string));
+        });
+
+        return { generated: true, fileKey: result.fileKey };
       }
 
       if (artifact.type === "audio") {

@@ -28,7 +28,7 @@ const TYPE_META: Record<
   string,
   { label: string; icon: LucideIcon; color: string }
 > = {
-  ppt: { label: "PPT", icon: PresentationIcon, color: "text-orange-500" },
+  infographic: { label: "INFOGRAPHIC", icon: PresentationIcon, color: "text-orange-500" },
   audio: { label: "AUDIO", icon: HeadphonesIcon, color: "text-blue-500" },
   mindmap: {
     label: "MIND MAP",
@@ -99,7 +99,7 @@ export function GenerateArtifactDialog({
     createArtifact.mutate({
       workspaceId,
       type: artifactType as
-        | "ppt"
+        | "infographic"
         | "audio"
         | "mindmap"
         | "flashcard"

@@ -9,7 +9,7 @@ import { assertWorkspaceOwnership } from "../utils";
 import { deleteFile } from "@/lib/r2";
 
 const artifactTypeEnum = z.enum([
-  "ppt",
+  "infographic",
   "audio",
   "mindmap",
   "flashcard",
