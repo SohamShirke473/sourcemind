@@ -58,10 +58,11 @@ export async function deleteFile(key: string): Promise<void> {
   );
 }
 
-export async function getSignedFileUrl(key: string): Promise<string> {
+export async function getSignedFileUrl(key: string, filename?: string): Promise<string> {
   const command = new GetObjectCommand({
     Bucket: R2_BUCKET_NAME,
     Key: key,
+    ...(filename ? { ResponseContentDisposition: `attachment; filename="${filename}"` } : {}),
   });
   return getSignedUrl(r2, command, { expiresIn: 3600 });
 }

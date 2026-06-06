@@ -1,7 +1,7 @@
 "use client";
 
 import { XIcon } from "lucide-react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,12 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AudioViewer } from "./audio-viewer";
 import { FlashcardViewer } from "./flashcard-viewer";
 import { MindmapViewer } from "./mindmap-viewer";
 import { QuizViewer } from "./quiz-viewer";
 import { ReportViewer } from "./report-viewer";
-
-import { AudioViewer } from "./audio-viewer";
 
 interface ArtifactDetailModalProps {
   id: string;
@@ -35,6 +34,13 @@ export function ArtifactDetailModal({
   content,
   status,
 }: ArtifactDetailModalProps) {
+  const [imageError, setImageError] = useState(false);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Reset error state whenever the displayed artifact changes or modal opens
+  useEffect(() => {
+    setImageError(false);
+  }, [id, open]);
+
   const isMindMap = type === "MIND MAP" || type === "mindmap";
   const isFlashcard = type === "FLASHCARDS" || type === "flashcard";
   const isQuiz = type === "QUIZ" || type === "quiz";
@@ -65,33 +71,36 @@ export function ArtifactDetailModal({
       return (
         <div className="flex h-full flex-col items-center justify-between p-6 gap-6 bg-card">
           <div className="flex-1 flex items-center justify-center overflow-auto w-full max-h-[50vh] min-h-[300px] border border-border rounded-ui bg-muted/20 relative group">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/api/artifacts/${id}/image`}
-              alt={title}
-              className="max-h-[48vh] max-w-full object-contain rounded-ui shadow-sm transition-transform duration-300 hover:scale-105"
-            />
+            {imageError ? (
+              <div className="flex flex-col items-center justify-center gap-4 text-center p-6">
+                <p className="text-sm font-medium text-destructive">
+                  Failed to load infographic image.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setImageError(false)}
+                >
+                  Retry Loading
+                </Button>
+              </div>
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              // biome-ignore lint/performance/noImgElement: standard img tag is necessary because the src references a dynamic backend API route directly
+              <img
+                src={`/api/artifacts/${id}/image`}
+                alt={title}
+                onError={() => setImageError(true)}
+                className="max-h-[48vh] max-w-full object-contain rounded-ui shadow-sm transition-transform duration-300 hover:scale-105"
+              />
+            )}
           </div>
           <div className="flex items-center gap-3">
             <Button
               variant="default"
               size="sm"
-              onClick={async () => {
-                try {
-                  const res = await fetch(`/api/artifacts/${id}/image`);
-                  if (!res.ok) throw new Error("Failed to fetch image");
-                  const blob = await res.blob();
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${title.toLowerCase().replace(/\s+/g, "-")}.png`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  window.URL.revokeObjectURL(url);
-                } catch {
-                  toast.error("Failed to download image");
-                }
+              onClick={() => {
+                window.location.href = `/api/artifacts/${id}/image?download=true`;
               }}
             >
               Download Infographic
@@ -108,8 +117,16 @@ export function ArtifactDetailModal({
     if (isMindMap && content?.nodes && content?.edges) {
       return (
         <MindmapViewer
-          nodes={content.nodes as { id: string; label: string; parentId: string | null }[]}
-          edges={content.edges as { from: string; to: string; label?: string }[]}
+          nodes={
+            content.nodes as {
+              id: string;
+              label: string;
+              parentId: string | null;
+            }[]
+          }
+          edges={
+            content.edges as { from: string; to: string; label?: string }[]
+          }
         />
       );
     }
@@ -125,7 +142,14 @@ export function ArtifactDetailModal({
     if (isQuiz && content?.questions) {
       return (
         <QuizViewer
-          questions={content.questions as { question: string; options: string[]; correctIndex: number; explanation?: string }[]}
+          questions={
+            content.questions as {
+              question: string;
+              options: string[];
+              correctIndex: number;
+              explanation?: string;
+            }[]
+          }
         />
       );
     }

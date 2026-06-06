@@ -40,8 +40,11 @@ export async function GET(
     return NextResponse.json({ error: "No image file found" }, { status: 404 });
   }
 
+  const download = _request.nextUrl.searchParams.get("download") === "true";
+  const filename = download ? `${artifact.title.toLowerCase().replace(/\s+/g, "-")}.png` : undefined;
+
   try {
-    const url = await getSignedFileUrl(artifact.fileUrl);
+    const url = await getSignedFileUrl(artifact.fileUrl, filename);
     return NextResponse.redirect(url);
   } catch {
     return NextResponse.json({ error: "Failed to generate signed URL" }, { status: 500 });
