@@ -1,7 +1,7 @@
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import { z } from "zod";
 import db from "@/db";
-import { workspaces } from "@/db/schema";
+import { workspaces, sources } from "@/db/schema";
 import { authProcedure, createTRPCRouter } from "../init";
 
 export const workspaceRouter = createTRPCRouter({
@@ -15,9 +15,20 @@ export const workspaceRouter = createTRPCRouter({
         );
       }
       return db
-        .select()
+        .select({
+          id: workspaces.id,
+          userId: workspaces.userId,
+          title: workspaces.title,
+          description: workspaces.description,
+          emoji: workspaces.emoji,
+          createdAt: workspaces.createdAt,
+          updatedAt: workspaces.updatedAt,
+          sourceCount: sql<number>`count(${sources.id})::int`,
+        })
         .from(workspaces)
+        .leftJoin(sources, eq(workspaces.id, sources.workspaceId))
         .where(and(...conditions))
+        .groupBy(workspaces.id)
         .orderBy(desc(workspaces.updatedAt));
     }),
 

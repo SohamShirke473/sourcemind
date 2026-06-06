@@ -115,7 +115,7 @@ export function WorkspaceGrid({ search }: WorkspaceGridProps) {
               title={workspace.title}
               description={workspace.description}
               emoji={workspace.emoji}
-              sourceCount={0}
+              sourceCount={workspace.sourceCount}
               lastModified={workspace.updatedAt.toISOString()}
             />
           ))}
@@ -152,7 +152,7 @@ export function WorkspaceGrid({ search }: WorkspaceGridProps) {
                       {workspace.title}
                     </a>
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">0</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{workspace.sourceCount}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {formatRelativeTime(workspace.updatedAt)}
                   </td>

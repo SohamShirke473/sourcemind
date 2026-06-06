@@ -80,6 +80,11 @@ export function ChatPanel({
     Map<string, Citation[]>
   >(new Map());
 
+  // Ref so the useChat onFinish closure always calls the latest loadMessages
+  const loadMessagesRef = useRef<(offset: number) => Promise<{ messages: DbMessage[]; hasMore: boolean }>>(
+    () => Promise.resolve({ messages: [], hasMore: false }),
+  );
+
   const { messages, status, sendMessage, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
@@ -91,6 +96,20 @@ export function ChatPanel({
       if (text && onTitleChange && initialMsgCount.current <= 1) {
         onTitleChange(text.slice(0, 255));
       }
+      // Re-fetch the latest messages from DB to pick up sourceCitations
+      // that were written by the server's onFinish handler.
+      loadMessagesRef.current(0).then((result) => {
+        setCitationsByContent((prev) => {
+          const next = new Map(prev);
+          for (const msg of result.messages) {
+            const citations = msg.sourceCitations as Citation[] | null;
+            if (msg.role === "assistant" && citations?.length) {
+              next.set(msg.content, citations);
+            }
+          }
+          return next;
+        });
+      });
     },
   });
 
@@ -107,6 +126,9 @@ export function ChatPanel({
     },
     [chatId, trpc.chat.getMessages, queryClient],
   );
+
+  // Keep ref in sync so onFinish always calls the latest version
+  loadMessagesRef.current = loadMessages;
 
   useEffect(() => {
     offsetRef.current = 0;

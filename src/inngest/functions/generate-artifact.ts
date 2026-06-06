@@ -224,7 +224,7 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "mindmap") {
         const result = await step.run("generate-mindmap", async () => {
           const response = await generateText({
-            model: "openai/gpt-oss-20b",
+            model: "minimax/minimax-m2.5",
             prompt: buildMindMapPrompt(sourceContent, (prompt as string) || ""),
           });
           return response.text;
@@ -251,7 +251,7 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "flashcard") {
         const result = await step.run("generate-flashcards", async () => {
           const response = await generateText({
-            model: "openai/gpt-oss-20b",
+            model: "minimax/minimax-m2.5",
             prompt: buildFlashcardPrompt(
               sourceContent,
               (prompt as string) || "",
@@ -281,7 +281,7 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "quiz") {
         const result = await step.run("generate-quiz", async () => {
           const response = await generateText({
-            model: "openai/gpt-oss-20b",
+            model: "minimax/minimax-m2.5",
             prompt: buildQuizPrompt(sourceContent, (prompt as string) || ""),
           });
           return response.text;
@@ -308,7 +308,7 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "report") {
         const result = await step.run("generate-report", async () => {
           const response = await generateText({
-            model: "openai/gpt-oss-20b",
+            model: "minimax/minimax-m2.5",
             prompt: buildReportPrompt(sourceContent, (prompt as string) || ""),
           });
           return response.text;
@@ -335,7 +335,7 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "audio") {
         const result = await step.run("generate-audio", async () => {
           const transcriptResponse = await generateText({
-            model: "openai/gpt-oss-20b",
+            model: "minimax/minimax-m2.5",
             prompt: `You are a podcast generator. Given the following source content and user instructions, generate a short podcast transcript (around 200 words) summarizing the key concepts.
 The podcast is hosted by two hosts: "Host 1" and "Host 2". Make it conversational and engaging.
 
@@ -352,7 +352,7 @@ Do not use markdown formatting.`,
           });
 
           const titleResponse = await generateText({
-            model: "openai/gpt-oss-20b",
+            model: "minimax/minimax-m2.5",
             prompt: `Generate a short (max 6 words), catchy title for a podcast episode based on this transcript:\n\n${transcriptResponse.text}`,
           });
           const generatedTitle = titleResponse.text.replace(/["*]/g, "").trim();

@@ -2,7 +2,10 @@
 
 import { Loader2Icon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import "katex/dist/katex.min.css";
 import { cn } from "@/lib/utils";
 
 interface ChatBubbleProps {
@@ -42,7 +45,12 @@ export function ChatBubble({
         {isUser ? (
           content
         ) : (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm, remarkMath]}
+            rehypePlugins={[rehypeKatex]}
+          >
+            {content}
+          </ReactMarkdown>
         )}
         {isStreaming && (
           <Loader2Icon className="ml-1 inline-block size-3 animate-spin align-middle" />
