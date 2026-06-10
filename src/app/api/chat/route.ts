@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   const systemPrompt = buildSystemPrompt(relevantChunks);
 
   const stream = streamText({
-    model: "minimax/minimax-m2.5",
+    model: "openai/gpt-5-nano",
     messages: modelMessages,
     system: systemPrompt,
     onFinish: async ({ text }) => {
