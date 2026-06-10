@@ -5,19 +5,12 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { env } from "@/env";
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing environment variable: ${name}`);
-  }
-  return value;
-}
-
-const R2_ACCOUNT_ID = requireEnv("R2_ACCOUNT_ID");
-const R2_ACCESS_KEY_ID = requireEnv("R2_ACCESS_KEY_ID");
-const R2_SECRET_ACCESS_KEY = requireEnv("R2_SECRET_ACCESS_KEY");
-const R2_BUCKET_NAME = requireEnv("R2_BUCKET_NAME");
+const R2_ACCOUNT_ID = env.R2_ACCOUNT_ID;
+const R2_ACCESS_KEY_ID = env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = env.R2_SECRET_ACCESS_KEY;
+const R2_BUCKET_NAME = env.R2_BUCKET_NAME;
 
 const r2 = new S3Client({
   region: "auto",

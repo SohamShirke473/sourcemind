@@ -1,13 +1,8 @@
 import { drizzle } from "drizzle-orm/neon-http";
+import { env } from "@/env";
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is missing");
-}
-
-const db = drizzle(databaseUrl, {
-  logger: process.env.DEBUG === "true",
+const db = drizzle(env.DATABASE_URL, {
+  logger: env.DEBUG === "true",
 });
 
 export default db;

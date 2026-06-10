@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { convertToModelMessages, streamText } from "ai";
 import { and, eq } from "drizzle-orm";
+import { gateway } from "@/lib/gateway";
 import db from "@/db";
 import { chats, messages, workspaces } from "@/db/schema";
 import { buildSystemPrompt } from "@/lib/rag/prompt";
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
   const systemPrompt = buildSystemPrompt(relevantChunks);
 
   const stream = streamText({
-    model: "openai/gpt-5-nano",
+    model: gateway("openai/gpt-5-nano"),
     messages: modelMessages,
     system: systemPrompt,
     onFinish: async ({ text }) => {

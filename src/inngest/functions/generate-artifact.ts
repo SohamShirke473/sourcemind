@@ -1,10 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
-import { generateText, generateImage } from "ai";
+import { generateImage, generateText } from "ai";
 import { eq, inArray } from "drizzle-orm";
-import { WaveFile } from "wavefile";
 import { z } from "zod";
 import db from "@/db";
 import { artifacts, sources } from "@/db/schema";
+import { env } from "@/env";
+import { gateway } from "@/lib/gateway";
 import { uploadFile } from "@/lib/r2";
 import { inngest } from "../client";
 
@@ -224,7 +225,7 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "mindmap") {
         const result = await step.run("generate-mindmap", async () => {
           const response = await generateText({
-            model: "minimax/minimax-m2.5",
+            model: gateway("minimax/minimax-m2.5"),
             prompt: buildMindMapPrompt(sourceContent, (prompt as string) || ""),
           });
           return response.text;
@@ -251,7 +252,7 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "flashcard") {
         const result = await step.run("generate-flashcards", async () => {
           const response = await generateText({
-            model: "minimax/minimax-m2.5",
+            model: gateway("minimax/minimax-m2.5"),
             prompt: buildFlashcardPrompt(
               sourceContent,
               (prompt as string) || "",
@@ -281,7 +282,7 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "quiz") {
         const result = await step.run("generate-quiz", async () => {
           const response = await generateText({
-            model: "minimax/minimax-m2.5",
+            model: gateway("minimax/minimax-m2.5"),
             prompt: buildQuizPrompt(sourceContent, (prompt as string) || ""),
           });
           return response.text;
@@ -308,7 +309,7 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "report") {
         const result = await step.run("generate-report", async () => {
           const response = await generateText({
-            model: "minimax/minimax-m2.5",
+            model: gateway("minimax/minimax-m2.5"),
             prompt: buildReportPrompt(sourceContent, (prompt as string) || ""),
           });
           return response.text;
@@ -335,14 +336,14 @@ export const generateArtifact = inngest.createFunction(
       if (artifact.type === "infographic") {
         const result = await step.run("generate-infographic", async () => {
           const { image } = await generateImage({
-            model: "google/imagen-4.0-ultra-generate-001",
+            model: gateway.image("google/imagen-4.0-ultra-generate-001"),
             prompt: `Create a clean, professional, and modern infographic visually summarizing the key concepts of the following content. Use a cohesive color palette, clear sections, readable layouts, and appropriate icons or visual structures. Make sure it looks polished and presentation-ready.
 
 Source content:
 ${sourceContent || "(No source content provided)"}
 
 User instructions:
-${prompt || "(No specific instructions)"}`
+${prompt || "(No specific instructions)"}`,
           });
 
           const base64Data = image.base64;
@@ -362,13 +363,16 @@ ${prompt || "(No specific instructions)"}`
           return { fileKey };
         });
 
-        const titleResult = await step.run("generate-infographic-title", async () => {
-          const response = await generateText({
-            model: "minimax/minimax-m2.5",
-            prompt: `Generate a short (max 6 words), descriptive title for an infographic based on this source content summary:\n\n${sourceContent.slice(0, 1000)}`,
-          });
-          return response.text.replace(/["*]/g, "").trim();
-        });
+        const titleResult = await step.run(
+          "generate-infographic-title",
+          async () => {
+            const response = await generateText({
+              model: gateway("minimax/minimax-m2.5"),
+              prompt: `Generate a short (max 6 words), descriptive title for an infographic based on this source content summary:\n\n${sourceContent.slice(0, 1000)}`,
+            });
+            return response.text.replace(/["*]/g, "").trim();
+          },
+        );
 
         await step.run("save-infographic", async () => {
           await db
@@ -388,7 +392,7 @@ ${prompt || "(No specific instructions)"}`
       if (artifact.type === "audio") {
         const result = await step.run("generate-audio", async () => {
           const transcriptResponse = await generateText({
-            model: "minimax/minimax-m2.5",
+            model: gateway("minimax/minimax-m2.5"),
             prompt: `You are a podcast generator. Given the following source content and user instructions, generate a short podcast transcript (around 200 words) summarizing the key concepts.
 The podcast is hosted by two hosts: "Host 1" and "Host 2". Make it conversational and engaging.
 
@@ -405,46 +409,57 @@ Do not use markdown formatting.`,
           });
 
           const titleResponse = await generateText({
-            model: "minimax/minimax-m2.5",
+            model: gateway("minimax/minimax-m2.5"),
             prompt: `Generate a short (max 6 words), catchy title for a podcast episode based on this transcript:\n\n${transcriptResponse.text}`,
           });
           const generatedTitle = titleResponse.text.replace(/["*]/g, "").trim();
 
           const ai = new GoogleGenAI({
-            apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY
+            apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
           });
-          
+
           const audioResponse = await ai.models.generateContent({
-             model: "gemini-3.1-flash-tts-preview",
-             contents: [{ parts: [{ text: `TTS the following conversation between Host 1 and Host 2:\n${transcriptResponse.text}` }] }],
-             config: {
-                   responseModalities: ['AUDIO'],
-                   speechConfig: {
-                      multiSpeakerVoiceConfig: {
-                         speakerVoiceConfigs: [
-                               {
-                                  speaker: 'Host 1',
-                                  voiceConfig: {
-                                     prebuiltVoiceConfig: { voiceName: 'Kore' }
-                                  }
-                               },
-                               {
-                                  speaker: 'Host 2',
-                                  voiceConfig: {
-                                     prebuiltVoiceConfig: { voiceName: 'Puck' }
-                                  }
-                               }
-                         ]
-                      }
-                   }
-             }
+            model: "gemini-3.1-flash-tts-preview",
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `TTS the following conversation between Host 1 and Host 2:\n${transcriptResponse.text}`,
+                  },
+                ],
+              },
+            ],
+            config: {
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                multiSpeakerVoiceConfig: {
+                  speakerVoiceConfigs: [
+                    {
+                      speaker: "Host 1",
+                      voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: "Kore" },
+                      },
+                    },
+                    {
+                      speaker: "Host 2",
+                      voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: "Puck" },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
           });
 
-          const base64Data = audioResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-          if (!base64Data) throw new Error("No audio data returned from Gemini TTS");
+          const base64Data =
+            audioResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData
+              ?.data;
+          if (!base64Data)
+            throw new Error("No audio data returned from Gemini TTS");
 
-          const pcmBuffer = Buffer.from(base64Data, 'base64');
-          
+          const pcmBuffer = Buffer.from(base64Data, "base64");
+
           // Generate a standard 44-byte WAV header for 24kHz 16-bit mono PCM
           const wavHeader = Buffer.alloc(44);
           wavHeader.write("RIFF", 0);
@@ -462,7 +477,7 @@ Do not use markdown formatting.`,
           wavHeader.writeUInt32LE(pcmBuffer.length, 40);
 
           const wavBuffer = Buffer.concat([wavHeader, pcmBuffer]);
-          
+
           const fileKey = `artifacts/audio/${artifactId}.wav`;
           await uploadFile({
             buffer: Buffer.from(wavBuffer),
@@ -479,7 +494,7 @@ Do not use markdown formatting.`,
               updatedAt: new Date(),
             })
             .where(eq(artifacts.id, artifactId as string));
-            
+
           return { generated: true, title: generatedTitle };
         });
 
