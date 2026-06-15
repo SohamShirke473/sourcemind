@@ -1,18 +1,21 @@
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import db from "@/db";
 import { artifacts, workspaces } from "@/db/schema";
+import { auth } from "@/lib/auth";
 import { getSignedFileUrl } from "@/lib/r2";
-import { auth } from "@clerk/nextjs/server";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  
-  const { userId } = await auth();
-  if (!userId) {
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -32,7 +35,7 @@ export async function GET(
     .where(eq(workspaces.id, artifact.workspaceId))
     .limit(1);
 
-  if (!workspace || workspace.userId !== userId) {
+  if (!workspace || workspace.userId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -43,7 +46,10 @@ export async function GET(
   try {
     const url = await getSignedFileUrl(artifact.fileUrl);
     return NextResponse.redirect(url);
-  } catch (err) {
-    return NextResponse.json({ error: "Failed to generate signed URL" }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to generate signed URL" },
+      { status: 500 },
+    );
   }
 }

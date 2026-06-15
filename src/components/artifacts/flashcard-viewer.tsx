@@ -79,7 +79,10 @@ export function FlashcardViewer({ cards }: FlashcardViewerProps) {
 
           <div
             className="absolute inset-0 flex items-center justify-center rounded-xl border-2 border-border bg-card p-6"
-            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+            style={{
+              backfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+            }}
           >
             <p className="text-center text-sm text-foreground">
               {currentCard.back}

@@ -1,8 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
 import { convertToModelMessages, streamText } from "ai";
 import { and, eq } from "drizzle-orm";
+import { headers } from "next/headers";
 import db from "@/db";
 import { chats, messages, workspaces } from "@/db/schema";
+import { auth } from "@/lib/auth";
 import { gateway } from "@/lib/gateway";
 import { buildSystemPrompt } from "@/lib/rag/prompt";
 import { searchRelevantChunks } from "@/lib/rag/search";
@@ -10,8 +11,10 @@ import { searchRelevantChunks } from "@/lib/rag/search";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -32,7 +35,7 @@ export async function POST(req: Request) {
     .select({ id: chats.id })
     .from(chats)
     .innerJoin(workspaces, eq(workspaces.id, chats.workspaceId))
-    .where(and(eq(chats.id, chatId), eq(workspaces.userId, userId)))
+    .where(and(eq(chats.id, chatId), eq(workspaces.userId, session.user.id)))
     .limit(1);
   if (!chat) {
     return new Response("Not found", { status: 403 });

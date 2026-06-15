@@ -152,10 +152,7 @@ export const messages = pgTable(
   },
   (table) => [
     index("messages_chat_id_idx").on(table.chatId),
-    index("messages_chat_id_created_at_idx").on(
-      table.chatId,
-      table.createdAt,
-    ),
+    index("messages_chat_id_created_at_idx").on(table.chatId, table.createdAt),
   ],
 );
 

@@ -1,4 +1,3 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
@@ -29,9 +28,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-mono">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <ClerkProvider>
-            <TRPCReactProvider>{children}</TRPCReactProvider>
-          </ClerkProvider>
+          <TRPCReactProvider>{children}</TRPCReactProvider>
         </ThemeProvider>
       </body>
     </html>

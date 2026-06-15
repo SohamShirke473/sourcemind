@@ -1,25 +1,25 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { getSessionCookie } from "better-auth/cookies";
+import { type NextRequest, NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/inngest(.*)",
-]);
+const PUBLIC_ROUTES = ["/", "/sign-in", "/sign-up", "/api/inngest"];
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+function isPublicRoute(pathname: string) {
+  return PUBLIC_ROUTES.some((prefix) => pathname.startsWith(prefix));
+}
+
+export function proxy(request: NextRequest) {
+  if (!isPublicRoute(request.nextUrl.pathname)) {
+    const sessionCookie = getSessionCookie(request);
+    if (!sessionCookie) {
+      return NextResponse.redirect(new URL("/sign-in", request.url));
+    }
   }
-});
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
     "/(api|trpc)(.*)",
-    // Always run for Clerk-specific frontend API routes
-    "/__clerk/(.*)",
   ],
 };

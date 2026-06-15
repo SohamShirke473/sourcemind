@@ -97,12 +97,8 @@
           "name": "artifacts_workspace_id_workspaces_id_fk",
           "tableFrom": "artifacts",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -174,12 +170,8 @@
           "name": "chats_workspace_id_workspaces_id_fk",
           "tableFrom": "chats",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -277,12 +269,8 @@
           "name": "messages_chat_id_chats_id_fk",
           "tableFrom": "messages",
           "tableTo": "chats",
-          "columnsFrom": [
-            "chat_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chat_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -401,12 +389,8 @@
           "name": "source_chunks_source_id_sources_id_fk",
           "tableFrom": "source_chunks",
           "tableTo": "sources",
-          "columnsFrom": [
-            "source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -414,12 +398,8 @@
           "name": "source_chunks_workspace_id_workspaces_id_fk",
           "tableFrom": "source_chunks",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -529,12 +509,8 @@
           "name": "sources_workspace_id_workspaces_id_fk",
           "tableFrom": "sources",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -645,40 +621,22 @@
     "public.artifact_status": {
       "name": "artifact_status",
       "schema": "public",
-      "values": [
-        "generating",
-        "ready",
-        "failed"
-      ]
+      "values": ["generating", "ready", "failed"]
     },
     "public.artifact_type": {
       "name": "artifact_type",
       "schema": "public",
-      "values": [
-        "ppt",
-        "audio",
-        "mindmap",
-        "flashcard",
-        "quiz",
-        "report"
-      ]
+      "values": ["ppt", "audio", "mindmap", "flashcard", "quiz", "report"]
     },
     "public.message_role": {
       "name": "message_role",
       "schema": "public",
-      "values": [
-        "user",
-        "assistant"
-      ]
+      "values": ["user", "assistant"]
     },
     "public.source_status": {
       "name": "source_status",
       "schema": "public",
-      "values": [
-        "processing",
-        "ready",
-        "failed"
-      ]
+      "values": ["processing", "ready", "failed"]
     },
     "public.source_type": {
       "name": "source_type",

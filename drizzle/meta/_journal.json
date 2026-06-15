@@ -57,6 +57,13 @@
       "when": 1780726461604,
       "tag": "0007_busy_bruce_banner",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781541464284,
+      "tag": "0008_funny_giant_man",
+      "breakpoints": true
     }
   ]
 }

@@ -152,7 +152,9 @@ export function WorkspaceGrid({ search }: WorkspaceGridProps) {
                       {workspace.title}
                     </a>
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{workspace.sourceCount}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {workspace.sourceCount}
+                  </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {formatRelativeTime(workspace.updatedAt)}
                   </td>

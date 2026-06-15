@@ -45,7 +45,11 @@ export function QuizViewer({ questions }: QuizViewerProps) {
   const answered = answers[currentIndex] !== null;
   const selectedAnswer = answers[currentIndex];
   const score = useMemo(
-    () => answers.reduce<number>((s, a, i) => s + (a === questions[i]?.correctIndex ? 1 : 0), 0),
+    () =>
+      answers.reduce<number>(
+        (s, a, i) => s + (a === questions[i]?.correctIndex ? 1 : 0),
+        0,
+      ),
     [answers, questions],
   );
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
@@ -82,7 +86,14 @@ export function QuizViewer({ questions }: QuizViewerProps) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [finished, answers, currentIndex, current?.options.length, goNext, goPrev]);
+  }, [
+    finished,
+    answers,
+    currentIndex,
+    current?.options.length,
+    goNext,
+    goPrev,
+  ]);
 
   const handleSelect = (idx: number) => {
     if (answers[currentIndex] !== null) return;
@@ -106,9 +117,11 @@ export function QuizViewer({ questions }: QuizViewerProps) {
     return "border-border opacity-50 cursor-default";
   };
 
-  const progressValue = total > 0
-    ? ((currentIndex + (answers[currentIndex] !== null ? 1 : 0)) / total) * 100
-    : 0;
+  const progressValue =
+    total > 0
+      ? ((currentIndex + (answers[currentIndex] !== null ? 1 : 0)) / total) *
+        100
+      : 0;
 
   if (!questions || questions.length === 0) {
     return (
@@ -157,7 +170,10 @@ export function QuizViewer({ questions }: QuizViewerProps) {
           const userAns = answers[qi];
           const correct = userAns === q.correctIndex;
           return (
-            <div key={qi} className="rounded-xl border border-border bg-card p-4">
+            <div
+              key={qi}
+              className="rounded-xl border border-border bg-card p-4"
+            >
               <div className="mb-2 flex items-center gap-2">
                 <span className="flex size-5 shrink-0 items-center justify-center">
                   {correct ? (
@@ -171,7 +187,9 @@ export function QuizViewer({ questions }: QuizViewerProps) {
                 </span>
               </div>
               <div className="prose prose-sm dark:prose-invert mb-3 max-w-none text-foreground">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{q.question}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {q.question}
+                </ReactMarkdown>
               </div>
               <div className="flex flex-col gap-1.5">
                 {q.options.map((opt, oi) => (
@@ -217,7 +235,9 @@ export function QuizViewer({ questions }: QuizViewerProps) {
 
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="prose prose-sm dark:prose-invert max-w-none text-foreground">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{current.question}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {current.question}
+          </ReactMarkdown>
         </div>
       </div>
 

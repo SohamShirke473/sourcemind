@@ -11,26 +11,61 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const AudioViewer = dynamic(() => import("./audio-viewer").then((mod) => mod.AudioViewer), {
-  loading: () => <div className="p-6 text-sm text-muted-foreground animate-pulse">Loading audio...</div>,
-  ssr: false,
-});
-const FlashcardViewer = dynamic(() => import("./flashcard-viewer").then((mod) => mod.FlashcardViewer), {
-  loading: () => <div className="p-6 text-sm text-muted-foreground animate-pulse">Loading flashcards...</div>,
-  ssr: false,
-});
-const MindmapViewer = dynamic(() => import("./mindmap-viewer").then((mod) => mod.MindmapViewer), {
-  loading: () => <div className="p-6 text-sm text-muted-foreground animate-pulse">Loading mindmap...</div>,
-  ssr: false,
-});
-const QuizViewer = dynamic(() => import("./quiz-viewer").then((mod) => mod.QuizViewer), {
-  loading: () => <div className="p-6 text-sm text-muted-foreground animate-pulse">Loading quiz...</div>,
-  ssr: false,
-});
-const ReportViewer = dynamic(() => import("./report-viewer").then((mod) => mod.ReportViewer), {
-  loading: () => <div className="p-6 text-sm text-muted-foreground animate-pulse">Loading report...</div>,
-  ssr: false,
-});
+const AudioViewer = dynamic(
+  () => import("./audio-viewer").then((mod) => mod.AudioViewer),
+  {
+    loading: () => (
+      <div className="p-6 text-sm text-muted-foreground animate-pulse">
+        Loading audio...
+      </div>
+    ),
+    ssr: false,
+  },
+);
+const FlashcardViewer = dynamic(
+  () => import("./flashcard-viewer").then((mod) => mod.FlashcardViewer),
+  {
+    loading: () => (
+      <div className="p-6 text-sm text-muted-foreground animate-pulse">
+        Loading flashcards...
+      </div>
+    ),
+    ssr: false,
+  },
+);
+const MindmapViewer = dynamic(
+  () => import("./mindmap-viewer").then((mod) => mod.MindmapViewer),
+  {
+    loading: () => (
+      <div className="p-6 text-sm text-muted-foreground animate-pulse">
+        Loading mindmap...
+      </div>
+    ),
+    ssr: false,
+  },
+);
+const QuizViewer = dynamic(
+  () => import("./quiz-viewer").then((mod) => mod.QuizViewer),
+  {
+    loading: () => (
+      <div className="p-6 text-sm text-muted-foreground animate-pulse">
+        Loading quiz...
+      </div>
+    ),
+    ssr: false,
+  },
+);
+const ReportViewer = dynamic(
+  () => import("./report-viewer").then((mod) => mod.ReportViewer),
+  {
+    loading: () => (
+      <div className="p-6 text-sm text-muted-foreground animate-pulse">
+        Loading report...
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 interface ArtifactDetailModalProps {
   id: string;

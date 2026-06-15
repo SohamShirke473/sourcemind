@@ -43,11 +43,7 @@ export function ChatBubble({
             : "border border-border bg-popover text-foreground prose prose-sm dark:prose-invert max-w-none",
         )}
       >
-        {isUser ? (
-          content
-        ) : (
-          <MarkdownRenderer content={content} />
-        )}
+        {isUser ? content : <MarkdownRenderer content={content} />}
         {isStreaming && (
           <Loader2Icon className="ml-1 inline-block size-3 animate-spin align-middle" />
         )}

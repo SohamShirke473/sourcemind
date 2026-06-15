@@ -1,5 +1,4 @@
 allowBuilds:
-  '@clerk/shared': set this to true or false
   '@google/genai': set this to true or false
   canvas: set this to true or false
   core-js: set this to true or false

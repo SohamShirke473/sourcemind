@@ -113,7 +113,10 @@ export function ArtifactsPanel({ workspaceId }: ArtifactsPanelProps) {
   };
 
   const handleCardClick = (artifact: (typeof artifacts)[number]) => {
-    const content = artifact.content as Record<string, unknown> | null | undefined;
+    const content = artifact.content as
+      | Record<string, unknown>
+      | null
+      | undefined;
     setSelectedArtifact({
       id: artifact.id,
       type: TYPE_LABEL_MAP[artifact.type] ?? artifact.type,

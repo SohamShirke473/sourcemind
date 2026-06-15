@@ -81,9 +81,9 @@ export function ChatPanel({
   >(new Map());
 
   // Ref so the useChat onFinish closure always calls the latest loadMessages
-  const loadMessagesRef = useRef<(offset: number) => Promise<{ messages: DbMessage[]; hasMore: boolean }>>(
-    () => Promise.resolve({ messages: [], hasMore: false }),
-  );
+  const loadMessagesRef = useRef<
+    (offset: number) => Promise<{ messages: DbMessage[]; hasMore: boolean }>
+  >(() => Promise.resolve({ messages: [], hasMore: false }));
 
   const { messages, status, sendMessage, setMessages } = useChat({
     transport: new DefaultChatTransport({

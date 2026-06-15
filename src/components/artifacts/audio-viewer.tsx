@@ -93,11 +93,11 @@ export function AudioViewer({ artifactId }: AudioViewerProps) {
     <div className="flex h-full flex-col items-center justify-center px-8 py-12 gap-10">
       <div className="flex flex-col items-center gap-6">
         <div className="relative flex size-32 items-center justify-center rounded-full bg-primary/10 shadow-lg shadow-primary/5">
-          <Disc3Icon 
+          <Disc3Icon
             className={cn(
               "size-14 text-primary transition-all duration-500",
-              isPlaying ? "animate-[spin_4s_linear_infinite]" : ""
-            )} 
+              isPlaying ? "animate-[spin_4s_linear_infinite]" : "",
+            )}
           />
         </div>
         <div className="flex flex-col items-center gap-1">
@@ -143,7 +143,7 @@ export function AudioViewer({ artifactId }: AudioViewerProps) {
           >
             <RotateCcwIcon className="size-5" />
           </button>
-          
+
           <button
             type="button"
             onClick={togglePlay}
