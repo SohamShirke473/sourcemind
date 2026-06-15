@@ -1,12 +1,13 @@
 "use client";
 
 import { Loader2Icon } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import "katex/dist/katex.min.css";
+import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
+
+const MarkdownRenderer = dynamic(() => import("./markdown-renderer"), {
+  loading: () => <span className="animate-pulse">…</span>,
+  ssr: false,
+});
 
 interface ChatBubbleProps {
   role: "user" | "assistant";
@@ -45,12 +46,7 @@ export function ChatBubble({
         {isUser ? (
           content
         ) : (
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeKatex]}
-          >
-            {content}
-          </ReactMarkdown>
+          <MarkdownRenderer content={content} />
         )}
         {isStreaming && (
           <Loader2Icon className="ml-1 inline-block size-3 animate-spin align-middle" />

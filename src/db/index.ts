@@ -1,15 +1,9 @@
-import { Pool } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 import { env } from "@/env";
 
-const globalForDb = globalThis as unknown as {
-  conn: Pool | undefined;
-};
-
-const conn = globalForDb.conn ?? new Pool({ connectionString: env.DATABASE_URL });
-if (process.env.NODE_ENV !== "production") globalForDb.conn = conn;
-
-const db = drizzle(conn, {
+const sql = neon(env.DATABASE_URL);
+const db = drizzle(sql, {
   logger: env.DEBUG === "true",
 });
 

@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { convertToModelMessages, streamText } from "ai";
 import { and, eq } from "drizzle-orm";
-import { gateway } from "@/lib/gateway";
 import db from "@/db";
 import { chats, messages, workspaces } from "@/db/schema";
+import { gateway } from "@/lib/gateway";
 import { buildSystemPrompt } from "@/lib/rag/prompt";
 import { searchRelevantChunks } from "@/lib/rag/search";
 
@@ -63,28 +63,32 @@ export async function POST(req: Request) {
     system: systemPrompt,
     onFinish: async ({ text }) => {
       try {
-        await db.insert(messages).values({
-          chatId,
-          role: "user",
-          content: userQuery,
-        });
-
-        await db.insert(messages).values({
-          chatId,
-          role: "assistant",
-          content: text,
-          sourceCitations: relevantChunks.map((c) => ({
-            sourceTitle: c.sourceTitle,
-            sourceType: c.sourceType,
-            snippet: c.chunkText.slice(0, 200),
-            similarity: c.similarity,
-          })),
-        });
-
-        await db
-          .update(chats)
-          .set({ updatedAt: new Date() })
-          .where(and(eq(chats.id, chatId), eq(chats.workspaceId, workspaceId)));
+        await Promise.all([
+          db.insert(messages).values([
+            {
+              chatId,
+              role: "user",
+              content: userQuery,
+            },
+            {
+              chatId,
+              role: "assistant",
+              content: text,
+              sourceCitations: relevantChunks.map((c) => ({
+                sourceTitle: c.sourceTitle,
+                sourceType: c.sourceType,
+                snippet: c.chunkText.slice(0, 200),
+                similarity: c.similarity,
+              })),
+            },
+          ]),
+          db
+            .update(chats)
+            .set({ updatedAt: new Date() })
+            .where(
+              and(eq(chats.id, chatId), eq(chats.workspaceId, workspaceId)),
+            ),
+        ]);
       } catch (err) {
         console.error("Failed to persist chat messages:", err);
       }
